@@ -227,4 +227,168 @@
 
   将n堆的物品数量进行异或，结果为0则必败，否则必胜。
 
-  
+
+### 字符串
+
+#### 字符串哈希
+
++ 构造哈希函数
+
+  + 哈希函数的一般构造方法：
+    $$
+    \sum^{l}_{i=1}{s[i]b^{l-i}}(modM)
+    $$
+    上述构造方法是通过给每个位置的字符增加一个权值，权值的大小根据字符串的位置，这样可以很大程度上避免冲突的产生。
+
+  + 上述的M通常为一个素数，一般可以去233，2333，23333....，为了防止哈希冲突，可以使用多个不同的M；b可以使用任意的值，但是一般都是选择10的倍数。
+
++ 使用场景
+
+  + 可以用于求某一个字符串的子串是否存在？这一场景一般可以利用KMP算法来进行实现，但是当我们的字符串的长度很大的时候，KMP算法容易超时。这样，我们就可以使用字符串哈希+二分的方法来进行求解。
+  + 给出n个字符串，要求我们求这n个字符串的最长公共的子字符串。我们可以利用二分来求字符串的长度，然后对于每个长度，我们求每个字符该长度的子串，然后将其存入哈希表里面，然后求这n个哈希表的交集，这里取交集的方法我们可以用一个map来进行存储每个哈希值，同时用一个ans时刻更新map的最大值。
+  + 求字符串的最长回文子串。我们首先对字符串进行预处理，然后进行枚举该最长回文子串的中心的坐标。
+
+#### KMP算法
+
++ next数组
+
+  对于一个字符串，它的每个前缀的next数组就是这个前缀的最长前缀==最长后缀，例如：`abcdeabcd`，它的next数组的值就是4，因为最长相等的前后缀为`abcd`
+
++ 因此，当我们进行模式串匹配的时候，给出的一个文本串t，和一个模式串s，我们可以构造出一个字符串为s#t，这样我们可以通过KMP求出每个位置的next的值，然后对于每一个值，等于模式串长度的就存在它的子串。
+
++ next数组的长度不能为这个字符串的自身。
+
+#### 字典树
+
++ 模板
+
+  ```C++
+  #include<iostream>
+  #include<algorithm>
+  #include<cstring>
+  #include<vector>
+  #include<map>
+  #include<stack>
+  #include<queue>
+  #include<fstream>
+  #include<bits/stdc++.h>
+  using namespace std;
+  typedef long long ll;
+  const int mod = 1e9+7;
+  struct node{
+      int nxt[2];
+      int end,sum;
+  }Node[500010];
+  int a[100010];
+  int main(){
+    //  freopen("test.in","r",stdin);
+      int n,m,js=1;
+      memset(Node,0,sizeof(Node));
+      cin>>m>>n;
+      for(int i=1;i<=m;i++){
+          int len;
+          cin>>len;
+          for(int j=1;j<=len;j++){
+              cin>>a[j];
+          }
+          int now=1;
+          for(int j=1;j<=len;j++){
+              if(Node[now].nxt[a[j]]!=0) now=Node[now].nxt[a[j]];
+              else{
+                  js++;
+                  Node[now].nxt[a[j]]=js;
+                  Node[js].nxt[1]=Node[js].nxt[0]=0;
+                  now=js;
+              }
+              Node[now].sum++;
+          }
+          Node[now].end++;
+      }
+      for(int i=1;i<=n;i++){
+          int len;
+          cin>>len;
+          for(int j=1;j<=len;j++){
+              cin>>a[j];
+          }
+          int now=1,ans=0;
+          bool flag=true;
+          for(int j=1;j<=len;j++){
+              if(Node[now].nxt[a[j]]!=0) now=Node[now].nxt[a[j]];
+              else{
+                  flag=false;
+                  break;
+              }
+              ans+=Node[now].end;
+          }
+          if(!flag) cout<<ans<<endl;
+          else cout<<ans+Node[now].sum-Node[now].end<<endl;
+      }
+      fclose(stdout);
+      return 0;
+  }
+  ```
+
++ 字典树就是我们把一个字符串构建成一颗树的形式，我们可以对每一个节点进行标号，然后我们可以从根节点进行便利过去，如果遇到某一个节点的下一个不存在的话，那么就构建一个新的节点出来。最后我们所有的字符串就构建成了一棵树的形式，我们同时可以给每个节点加上一些其他的属性，比如表示经过这个节点的字符串的个数或者是以这个节点结束的字符的个数等等。
+
+#### Manacher算法
+
++ 马拉车算法是用来求最大的回文字符串的长度的一个算法，它的时间复杂度为O(n).这种算法是采用一边优化，一边暴力的算法进行求解的。核心思想是每次记录下当前的最长的回文串的最左边和最右边的长度，然后，我们枚举每个中心，通过与左右边界的位置来进行判断它的边界。这里奇数和偶数是分开来计算的。我们可以在现在原字符串的左右两边插入一个肯定不会出现的字符，然后在每个字符中间插入一个‘#’,最后我们只需要按奇数长度的字符来进行处理就行了。
+
++ 计算最长回文半径的模板
+
+  ```C++
+  scanf("%s",c);
+  int len=strlen(c);
+  int cnt=0;
+  s[++cnt]='^',s[++cnt]='#';
+  for(int i=0;i<len;i++){
+  	s[++cnt]=c[i];
+  	s[++cnt]='#';
+  }
+  s[++cnt]='!';
+  int mx=0;
+  int id=0;
+  for(int i=1;i<=cnt;i++){
+  	if(i<mx) p[i]=min(p[id*2-i],mx-i);
+  	else p[i]=1;
+  	while(s[i-p[i]]==s[i+p[i]]) p[i]++;
+  	if(mx<i+p[i]) id=i,mx=i+p[i];
+  }
+  ```
+
++ 计算最长回文长度的模板
+
+  ```C++
+  #include<bits/stdc++.h>
+  using namespace std;
+  int d[23000000];
+  int main(){
+  	string s;
+  	cin>>s;
+  	int len=s.size();
+  	string c="";
+  	for(int i=0;i<len;i++){
+  		c+="#";
+  		c+=s[i];
+  	}
+  	c+="#";
+  	len=c.size();
+  	int ans=0;
+  	for(int i=0,l=0,r=-1;i<len;i++){
+  		int k=(i>r)?1:min(d[l+r-i],r-i);
+  		while(0<=i-k&&i+k<len&&c[i-k]==c[i+k]){
+  			k++;
+  		}
+  		d[i]=k--;
+  		ans=max(ans,d[i]-1);
+  		if(i+k>r){
+  			l=i-k;
+  			r=i+k;
+  		}
+  	}
+  	cout<<ans;
+  	return 0;
+  }
+  ```
+
++ 
