@@ -275,6 +275,163 @@
 
 + 另外，这里要说明的一个是，加入我们的指数很大的话，用递归的写法很容易爆内存，所以，建议使用非递归的写法。
 
++ 对于利用矩阵进行加速的一些题目，我们首要就是通过推导出原始的矩阵，最后的答案一般是某一个矩阵的某一个元素，如果我们不确定是哪一个矩阵的哪个元素，我们可以先进行打表观察。
+
+
+#### 高斯消元
+
+##### 求逆元
+
++ 这个板子是利用先构造一个单位矩阵，然后将原矩阵化为单位矩阵，对原矩阵的操作同时施加到对单位矩阵的操作上面，最后得到的那个单位矩阵的情况就是我们要求的矩阵的逆了。
+
+  ```C++
+  #include<iostream>
+  #include<algorithm>
+  #include<cstring>
+  #include<vector>
+  #include<map>
+  #include<stack>
+  #include<queue>
+  #include<fstream>
+  #include<bits/stdc++.h>
+  using namespace std;
+  typedef long long ll;
+  map<int,int> mp;
+  const int mod = 1e9+7;
+  const int N=200010;
+  ll a[450][450<<1];
+  ll qk(ll a,ll b){
+      ll c=1;
+      while(b){
+          if(b&1) c=c*a%mod;
+          a=a*a%mod;
+          b>>=1;
+      }
+      return c;
+  }
+  int main(){
+      //freopen("test.in","r",stdin);
+      int n;
+      cin>>n;
+      int m=n+n;
+      for(int i=1;i<=n;i++){
+          for(int j=1;j<=n;j++){
+              cin>>a[i][j];
+          }
+          a[i][i+n]=1;
+      }
+      for(int i=1;i<=n;i++){
+          for(int j=i;j<=n;j++){
+              if(a[j][i]){
+                  for(int k=1;k<=m;k++){
+                      swap(a[i][k],a[j][k]);
+                  }
+                  break;
+              }
+          }
+  
+          //无解的情况
+          if(!a[i][i]){
+              puts("No Solution");
+              return 0;
+          }
+  
+  
+          //将对角线上的元素化为1
+          ll r=qk(a[i][i],mod-2);
+          for(int j=i;j<=m;j++){
+              a[i][j]=a[i][j]*r%mod;
+          }
+  
+  
+  
+          for(int j=1;j<=n;j++){  //对行进行遍历
+              if(j!=i){
+                  r=a[j][i];
+                  for(int k=i;k<=m;k++){
+                      a[j][k]=(a[j][k]-r*a[i][k]%mod+mod)%mod;
+                  }
+              }
+          }
+      }
+      for(int i=1;i<=n;i++){
+          for(int j=n+1;j<=m;j++){
+              cout<<a[i][j]<<" ";
+          }
+          cout<<endl;
+      }
+      fclose(stdout);
+      return 0;
+  }
+  ```
+
+##### 求线性方程的解 
+
++ 求解线性方程组的解，它的原理是将矩阵化为只有对角线不为0,其他地方全为0的矩阵，我们通过矩阵的行与行之间的消元公式求得。
+
+  ```C++
+  #include<iostream>
+  #include<algorithm>
+  #include<cstring>
+  #include<vector>
+  #include<map>
+  #include<stack>
+  #include<queue>
+  #include<fstream>
+  #include<bits/stdc++.h>
+  using namespace std;
+  typedef long long ll;
+  map<int,int> mp;
+  const int mod = 1e9+7;
+  const int N=200010;
+  double a[120][120];
+  int main(){
+      //freopen("test.in","r",stdin);
+      int n;
+      scanf("%d",&n);
+      for(int i=1;i<=n;i++){
+          for(int j=1;j<=n+1;j++){
+              scanf("%lf",&a[i][j]);
+          }
+      }
+      for(int i=1;i<=n;i++){   //枚举列
+          int mx=i;
+          for(int j=i+1;j<=n;j++){  //找出对应列的行的最大值
+              if(fabs(a[j][i])>fabs(a[mx][i])){
+                  mx=j;
+              }
+          }
+          for(int j=1;j<=n+1;j++){
+              swap(a[i][j],a[mx][j]);
+          }
+  
+  
+          //判断是否无解
+          if(!a[i][i]){
+              puts("No Solution");
+              return 0;
+          }
+  
+          //同一列的每一行的数都减去这个数
+          for(int j=1;j<=n;j++){
+              if(j!=i){
+                  double tmp=a[j][i]/a[i][i];
+                  for(int k=i+1;k<=n+1;k++){
+                      a[j][k]-=a[i][k]*tmp;
+                  }
+              }
+          }
+      }
+      for(int i=1;i<=n;i++){
+          printf("%.2lf\n",a[i][n+1]/a[i][i]);
+      }
+      fclose(stdout);
+      return 0;
+  }
+  ```
+
+  
+
 
 ### 字符串
 
