@@ -1,10 +1,70 @@
 ### 数论
 
+#### 逆元
+
++ 求逆元的方式有很多中，根据不同的情况可以利用不同的方法来进行求解。
+
++ 如果模数为素数，可以使用费马小定理进行求解。
+
++ 利用扩展欧几里得算法进行求解。
+
+  ```C++
+  void exgcd(int a,int b,int &x,int &y){
+  	if(b==0){
+  		x=1,y=0;
+  		return;
+  	}
+  	exgcd(b,a%b,y,x);
+  	y=y-a/b*x;
+  }
+  ```
+
++ 线性求1-n逆元。线性求逆元可以是我们在O(n）的时间复杂度内实现求1-n中每个数关于p的逆元。如果我们用上述的方法求解，很可能会超时。
+
+  + 首先，我们要知道1的逆元是1，。
+
+  + 然后，对于每个$i^{-1}$,我们很显然知道了i之前的每个数j的逆元了。
+
+  + 模板如下：
+
+    ```C++
+    inv[1]=1;
+    for(int i=2;i<=n;i++){
+    	inv[i]=(ll)(p-p/i)*inv[p%i]%p;
+    }
+    ```
+
+  + 这里使用p-p/i来防止负数的产生。同时要注意的是，这里的i应该与p互质，逆元的定义就是两个互质的数之间存在逆元，如果不互质，这个逆元是不存在的。
+
++ 线性求n个数之间的逆元
+
+  + 首先，我们求出n个数的前缀积，然后利用快速幂或者扩展欧几里得算法计算$S_n$的逆元，记为$SV_n$
+
+  + 然后，我们将$SV_n$乘上n个数中的每一个的$a_i$,我们就得到了$SV_i$,这个数就是n个数中不包含$a_i$的乘积的逆元了。
+
+  + 最后$a_i^{-1}$就可以用$S_{i-1}SV_i$来进行表示出来。
+
+    ```C++
+    s[0]=1;
+    for(int i=1;i<=n;i++){
+    	s[i]=s[i-1]*a[i]%p;
+    }
+    s[n]=qpow(s[n],p-2);
+    for(int i=n;i>=1;--i){
+    	sv[i-1]=sv[i]*a[i]%p;
+    }
+    for(int i=1;i<=n;i++){
+    	inv[i]=sv[i]*s[i-1]%p;
+    }
+    ```
+
+  + 
+
 #### 蜚蜀定理
 
 + 蜚蜀定理时关于最大公因数的定理，定义。
 
-  若gcd(a,b)=d,那么对于任意的整数x,y,ax+by都一定时d的倍数，特别的，一定存在整数x,y，使得ax+by=d成立。
+  若gcd(a,b)=d,那么对于任意的整数x,y,ax+by都一定时d的倍数，特别的，一定存在整数x,y，使得ax+by=d,也就是ax+by=gcd(a,b)成立。
 
 + n个整数间的蜚蜀定理
 
@@ -208,7 +268,8 @@
       return 0;
   }
   ```
-
+  
++ 对于一个1-n的排列，求集合的排列中没有一个数在它的指定的位置的数的排列的个数$D_n=(n-1)(D_{n-1}+D_{n-2})$
 
 #### 博弈论
 
@@ -280,7 +341,7 @@
 
 #### 高斯消元
 
-##### 求逆元
+##### 求逆矩阵
 
 + 这个板子是利用先构造一个单位矩阵，然后将原矩阵化为单位矩阵，对原矩阵的操作同时施加到对单位矩阵的操作上面，最后得到的那个单位矩阵的情况就是我们要求的矩阵的逆了。
 
@@ -445,6 +506,103 @@
   \sum^{n}_{i=1}{H_{i-1}}{H_{n-i}}
   $$
 
+#### 线性基
+
++ 线性基的元素相互异或得到原籍和的元素的所有相互异或的得到的值。
+
++ 线性基满足性质1的最小的集合。
+
++ 线性基没有异或和为0的子集。
+
++ 线性基中每个元素的异或方案唯一。
+
++ 线性基中每个元素的二进制最高为互不相同。
+
++ 构造线性基的方法：对原集合的每个数p转为二进制，从高位向低位进行扫描，如果第i为为1,并且ai不存在，那么令ai=p并结束扫描，如果存在，令p=p^ai.
+
++ 线性基可以用来求一堆数之间相互异或，查询最值和第k大值。
+
+  ```C++
+  #include<bits/stdc++.h>
+  using namespace std;
+  typedef long long ll;
+  const int mod =1e9+7;
+  const int MN=60;
+  ll a[62],tmp[62];
+  bool flag;
+  void ins(ll x){
+      for(int i=MN;i;i--){
+          if(x&(1ll<<i)){
+              if(!a[i]){
+                  a[i]=x;
+                  return;
+              }
+              x^=a[i];
+          }
+      }
+      flag=true;
+  }
+  bool check(ll x){
+      for(int i=MN;i;i--){
+          if(x&(1ll<<i)){
+              if(!a[i]){
+                  return false;
+              }
+              x^=a[i];
+          }
+      }
+      return true;
+  }
+  //查询最大值
+  ll qmx(ll res=0){
+      for(int i=MN;i;i--){
+          res=max(res,res^a[i]);
+      }
+      return res;
+  }
+  //查询最小值
+  ll qmi(){
+      if(flag) return 0;
+      for(int i=0;i<=MN;i++){
+          if(a[i]) return a[i];
+      }
+      return 0;
+  }
+  // 查询一堆数异或出来的第k大值
+  ll query(ll k){
+      ll res=0;
+      int cnt=0;
+      k-=flag;
+      if(k){
+          return 0;
+      }
+      for(int i=0;i<=MN;i++){
+          for(int j=i-1;j;j--){
+              if(a[i]&(1ll<<j)) a[i]^=a[j];
+          }
+          if(a[i]) tmp[cnt++]=a[i];
+      }
+      if(k>=(1ll<<cnt)) return -1;
+      for(int i=0;i<cnt;i++){
+          if(k&(1ll<<i)) res^=tmp[i];
+      }
+      return res;
+  }
+  int  main(){
+      //freopen("test.in","r",stdin);
+      ll n,x;
+      cin>>n;
+      for(int i=1;i<=n;i++){
+          cin>>x;
+          ins(x);
+      }
+      cout<<qmx()<<endl;
+      fclose(stdout);
+      return 0;
+  }
+  ```
+
+  
 
 ### 字符串
 
@@ -609,4 +767,129 @@
   }
   ```
 
-+ 
+
+#### ac自动机
+
++ ac自动机是KMP+Tire两种算法的综合，它解决的问题是如何查询一个文本串可以与多少个模式串的匹配。
+
++ ac自动机是将所有的模式串构造成一棵Trie，我们称之为Trie树。
+
++ 同时，我们要引入一个失配指针fail的概念，失配指针是指一个字符串中匹配当前状态的最长后缀。可以将它和KMP算法的next数组比较起来理解。fail指针就是一个模式串的后缀集合
+
++ ac自动机主要有两个方面，一个是构建fail指针，另一个就是构建自动机。
+
+  ```C++
+  #include<bits/stdc++.h>
+  using namespace std;
+  const int N=1e6+6;  //字符串的长度
+  int n;
+  int tr[N][26],tot;
+  int e[N],fail[N];
+  void insert(char *s){
+      int u=0;
+      for(int i=1;s[i];i++){
+          if(!tr[u][s[i]-'a']) tr[u][s[i]-'a']=++tot;
+          u=tr[u][s[i]-'a'];
+      }
+      e[u]++;
+  }
+  queue<int> q;
+  void build(){
+      for(int i=0;i<26;i++){
+          if(tr[0][i]){
+              q.push(tr[0][i]);
+          }
+      }
+      while(q.size()){
+          int u=q.front();
+          q.pop();
+          for(int i=0;i<26;i++){
+              if(tr[u][i]){
+                  fail[tr[u][i]]=tr[fail[u]][i];
+                  q.push(tr[u][i]);
+              }else{
+                  tr[u][i]=tr[fail[u]][i];
+              }
+          }
+      }
+  }
+  //进行询问的文本串
+  int query(char *t){
+      int u=0,res=0;
+      for(int i=1;t[i];i++){
+          u=tr[u][t[i]-'a'];
+          for(int j=u;j&&e[j]!=-1;j=fail[j]){
+              res+=e[j];
+              e[j]=-1;
+          }
+      }
+      return res;
+  }
+  char s[N];
+  int main(){
+      //freopen("test.in","r",stdin);
+      scanf("%d",&n);
+      for(int i=1;i<=n;i++){
+          scanf("%s",s+1);
+          insert(s);
+      }
+      scanf("%s",s+1);
+      build();
+      printf("%d\n",query(s));
+      fclose(stdout);
+      return 0;
+  }
+  ```
+
+
+#### 高精度
+
++ 下面主要是用C++模拟的一些大数加法，减法，乘法和除法
+
+  ```C++
+  
+  vector<int> add(vector<int> &A,vector<int> &B){
+      vector<int> C;
+      int t=0;
+      for(int i=0;i<A.size()||i<B.size();i++){
+          if(i<A.size())  t+=A[i];
+          if(i<B.size())  t+=B[i];
+          C.push_back(t%10);
+          t/=10;
+      }
+      if(t)   C.push_back(t);
+      return C;
+  }
+  
+  vector<int> mul(vector<int> &A,int b){
+      vector<int> C;
+      int t=0;
+      for(int i=0;i<A.size()||t;i++){
+          if(i<A.size())  t+=A[i]*b;//模拟
+          C.push_back(t%10);
+          t/=10;
+      }
+      while(C.size()>1&&C.back()==0)  C.pop_back();//排除前导0,b为0时会出现多余前导0
+      return C;
+  }
+  
+  vector<int> div(vector<int> &A,int b,int &r){
+      vector<int> C;
+      for(int i=A.size()-1;i>=0;i--){
+          r=r*10+A[i];
+          C.push_back(r/b);
+          r%=b;
+      }
+      reverse(C.begin(),C.end());//翻转是为了方便去除前导0
+      while(C.size()>1&&C.back()==0)  C.pop_back();
+      return C;
+  }
+  void print(vector<int> a){
+  	for(int i=a.size()-1;i>=0;i--){
+  		cout<<a[i];
+  	}
+  	cout<<endl;
+  }
+  ```
+
+  

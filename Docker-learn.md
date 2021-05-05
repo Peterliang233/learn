@@ -123,8 +123,6 @@ CGRANT ALL PRIVILEGES ON *.* TO `wkcto`@`%`;  //给该用户设置权限
 + 进入nginx : docker exec -it 容器id bash
 + 进入之后可以进行找到nginx.conf这个文件，然后找到/etc/nginx/conf.d/*.conf，里面有一个default.conf这个文件，里面存放了nginx的配置信息。
 + 上传本地的文件到nginx容器里：docker cp 文件名的绝对路径 容器id:容器的root文件的路径
-+ 
-+ 
 
 #### Docker自定义镜像
 
