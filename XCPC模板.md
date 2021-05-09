@@ -933,3 +933,130 @@
 
   + 汉明距离针对的是两个长度相等的字符串对应位字符不一样的数量。
   + 解决的办法是通过将两个串进行异或运算，如果结果对应位的值为1的话说明就不是相等的。
+
+#### 凸包
+
++ 在平面上能包含所有给定点的最小的凸多边形叫做凸包。
+
++ 对于给定的集合，所有包含x的凸集的交集称为x的凸包。
+
++ 凸包用一个最小的周长围住了给定的所有的点，如果一个凹多边形围住了所有的点，它的周长一定不是最小。
+
++ Andrew算法。时间复杂度为O($nlogn$)。
+
+  + 我们把x坐标作为第一关键字，把y坐标作为第二关键字。
+  + 显然，排序最小的元素和最大的元素一定是在凸包上面的，我们从某一个点逆时针出发，我们发现我们一定是往左拐的，一定出现右拐的情况，就说明我们目前走的是凹包，那么显然不会是最短的周长解了。
+  + 我们用一个单调栈来维护上下凸壳。先用升序枚举出下凸壳，然后降序枚举出上凸壳。
+  + 求凸壳的时候，一旦发现即将进栈的点和栈顶的两个点是向右旋转的，也就是叉积小于等于0,那么就弹出栈顶，回退到上一步，知道遇到叉积大于0的情况。
+
+  ```C++
+  // stk[] 是整型，存的是下标
+  // p[] 存储向量或点
+  tp = 0;                       // 初始化栈
+  std::sort(p + 1, p + 1 + n);  // 对点进行排序
+  stk[++tp] = 1;
+  //栈内添加第一个元素，且不更新 used，使得 1 在最后封闭凸包时也对单调栈更新
+  for (int i = 2; i <= n; ++i) {
+    while (tp >= 2  // 下一行 * 操作符被重载为叉积
+           && (p[stk[tp]] - p[stk[tp - 1]]) * (p[i] - p[stk[tp]]) <= 0)
+      used[stk[tp--]] = 0;
+    used[i] = 1;  // used 表示在凸壳上
+    stk[++tp] = i;
+  }
+  int tmp = tp;  // tmp 表示下凸壳大小
+  for (int i = n - 1; i > 0; --i)
+    if (!used[i]) {
+      //      ↓求上凸壳时不影响下凸壳
+      while (tp > tmp && (p[stk[tp]] - p[stk[tp - 1]]) * (p[i] - p[stk[tp]]) <= 0)
+        used[stk[tp--]] = 0;
+      used[i] = 1;
+      stk[++tp] = i;
+    }
+  for (int i = 1; i <= tp; ++i)  // 复制到新数组中去
+    h[i] = p[stk[i]];
+  int ans = tp - 1;
+  ```
+
++ Graham算法
+
+  + 该算法是通过找出y坐标最小，x坐标最小的那个点。然后利用单调栈的思想来进行求出凸包上面的点。重点是在于排序函数
+
+    ```C++
+    #include<bits/stdc++.h>
+    using namespace std;
+    typedef long long ll;
+    struct node{
+        double x,y;
+    }Node[100010],s[100010];
+    //逆时针方向走，检查两个向量(a,b)之间的叉乘，以此来判断是否产生凸包
+    double check(node a1,node a2,node b1,node b2){
+        return (a2.x-a1.x)*(b2.y-b1.y)-(b2.x-b1.x)*(a2.y-a1.y);  //x1y2-x2y1
+    }
+    
+    //计算两个点之间的距离
+    double d(node a,node b){
+        return sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));
+    }
+    
+    
+    bool cmp(node a,node b){
+        double tmp=check(Node[1],a,Node[1],b);
+        if(tmp>0){
+            return true;
+        }
+        if(tmp==0&&d(Node[1],a)<d(Node[1],b)) {
+            return true;
+        }
+        return false;
+    }
+    int main(){
+        //freopen("test.in","r",stdin);
+        int n;
+        scanf("%d",&n);
+        for(int i=1;i<=n;i++){
+            scanf("%lf%lf",&Node[i].x,&Node[i].y);
+            double mid;
+    
+            //找出y坐标最小的那个点, 如果有多个y最小的点，那么就找x最小的点
+            if(i!=1){
+                if(Node[i].y<Node[1].y){
+                    mid=Node[i].y,Node[i].y=Node[1].y,Node[1].y=mid;
+                    mid=Node[i].x,Node[i].x=Node[1].x,Node[1].x=mid;
+                }else if(Node[i].y==Node[1].y){
+                    if(Node[i].x<Node[1].x){
+                        mid=Node[i].y,Node[i].y=Node[1].y,Node[1].y=mid;
+                        mid=Node[i].x,Node[i].x=Node[1].x,Node[1].x=mid;
+                    }
+                }
+                
+            }
+        }
+        sort(Node+2,Node+1+n,cmp);
+        
+    
+        //s来模拟栈
+        s[1]=Node[1];
+        int cnt=1;
+        for(int i=2;i<=n;i++){
+    
+    
+            //栈顶两个点的向量和栈顶与当前点之间形成的向量，这是一个单调栈的思想
+            while(cnt>1&&check(s[cnt-1],s[cnt],s[cnt],Node[i])<=0){
+                cnt--;
+            }
+            cnt++;
+            s[cnt]=Node[i];
+        }
+        s[cnt+1]=Node[1]; //合成一个封闭的凸包
+        double ans=0;
+        for(int i=1;i<=cnt;i++){
+            ans+=d(s[i],s[i+1]);
+        }
+        printf("%.2lf\n",ans);
+        fclose(stdout);
+        return 0;
+    }
+    ```
+
+    
+
