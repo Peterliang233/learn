@@ -1060,3 +1060,192 @@
 
     
 
+#### 平面最近点对
+
++ 背景：请平面内n个点之间最近的点对。使用的是nlogn的分治算法。
++ 首先，我们对于每一个坐标的x和y，我们以x为第一关键字，以y为第二关键字进行排序。我们以中点为m=n/2。中心点的坐标为xm,ym
++ 然后，我们将两个点集拆分成两个大小相同的集合S1和S2，然后，我们假设两个集合的最近的点对的距离分别为h1和h2，我们取最小值为h。
++ 当我们合并的时候，我们试图找到这样的一个点对，一个在集合A1，另一个在集合A2,两者的距离都是小于h，然后我们将所有横坐标到xm的差小于h的放入一个集合B。得到了之后我们将b中的点按照y进行排序。
++ 第一次排序是在分治之前进行一次，第二次排序是将排序过的点集进行归并。
+
++ 非递归的写法
+
+```C++
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <set>
+const int N = 200005;
+int n;
+double ans = 1e20;
+struct point {
+    double x, y;
+    point(double x = 0, double y = 0) : x(x), y(y) {}
+};
+
+struct cmp_x {
+    bool operator()(const point &a, const point &b) const {
+        return a.x < b.x || (a.x == b.x && a.y < b.y);
+    }
+};
+
+struct cmp_y {
+    bool operator()(const point &a, const point &b) const { return a.y < b.y; }
+};
+
+inline void upd_ans(const point &a, const point &b) {
+    double dist = sqrt(pow((a.x - b.x), 2) + pow((a.y - b.y), 2));
+    if (ans > dist) ans = dist;
+}
+
+point a[N];
+std::multiset<point, cmp_y> s;
+
+int main() {
+    //freopen("/home/lyp/code/algorithm/test.in","r",stdin);
+    scanf("%d", &n);
+    for (int i = 0; i < n; i++) scanf("%lf%lf", &a[i].x, &a[i].y);
+    std::sort(a, a + n, cmp_x());
+    for (int i = 0, l = 0; i < n; i++) {
+        while (l < i && a[i].x - a[l].x >= ans) s.erase(s.find(a[l++]));
+        for (auto it = s.lower_bound(point(a[i].x, a[i].y - ans));
+             it != s.end() && it->y - a[i].y < ans; it++)
+            upd_ans(*it, a[i]);
+        s.insert(a[i]);
+    }
+    printf("%.4lf", ans);
+    fclose(stdout);
+    return 0;
+}
+
+```
+
++ 对于求平面最进或者最远的点对的问题，我们可以先对点进行x的从小到大的排序，然后我们可以发现，如果求最近的点，那么他们之间肯定是靠得比较近的，所以，我们可以指定一个常数s，当我们遍历到某一个点的时候，我们找一下这个点与他后面的s个点的距离，同时不断更新最小值对于找最大值的情况，我们需要做的是遍历到每一个点i的时候，我们计算最后s个点与这个点的距离，同时不断更新最大值即可。
+
+```C++
+#include<iostream>
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <vector>
+using namespace std;
+const int s=13;
+
+struct node{
+    double x,y;
+    friend bool operator <(const node &x1,const node &x2){
+        return x1.x<x2.x;
+    }
+}a[200010];
+
+int main() {
+    //freopen("/home/lyp/code/algorithm/test.in","r",stdin);
+    double mi=1e20,mx=0;
+    int n;
+    scanf("%d",&n);
+    for(int i=0;i<n;i++){
+        scanf("%lf %lf",&a[i].x,&a[i].y);
+    }
+    sort(a,a+n);
+    for(int i=0;i<n;i++){
+
+        //对后面的s个进行比较
+        for(int j=i+1;j<n&&j<i+s;j++){
+            mi=min(mi,(a[i].x-a[j].x)*(a[i].x-a[j].x)+(a[i].y-a[j].y)*(a[i].y-a[j].y));
+        }
+
+        //从最后面找出s个去最大值
+        for(int j=n-1;j>=i&&j>=n-s;j--){
+            mx=max(mx,(a[i].x-a[j].x)*(a[i].x-a[j].x)+(a[i].y-a[j].y)*(a[i].y-a[j].y));
+        }
+    }
+
+    printf("%.4lf %.4lf\n",sqrt(mi), sqrt(mx));
+    fclose(stdout);
+    return 0;
+}
+
+```
+
+#### 最小园覆盖问题
+
++ 假设找到了圆的前i-1个点的最小覆盖圆，当我们加入第i个点的时候，如果这个点在圆上，我们什么都不做，如果不在圆上，我们就找到新的最小覆盖圆，这个圆肯定要经过第i个点。我们以第i个点为基础，重复以上过程加入第j个点，如果第j个点在圆外，那么最小覆盖圆必经过第j个点。
+
++ 模板求包含n个点的最小的圆的半径和圆心坐标
+
+  ```C++
+  #include <cmath>
+  #include <cstdio>
+  #include <cstdlib>
+  #include <cstring>
+  #include <iostream>
+  
+  using namespace std;
+  
+  int n;
+  double r;
+  
+  struct point {
+      double x, y;
+  } p[100005], o;
+  
+  inline double sqr(double x) { return x * x; }
+  
+  inline double dis(point a, point b) {
+      return sqrt(sqr(a.x - b.x) + sqr(a.y - b.y));
+  }
+  
+  inline bool cmp(double a, double b) { return fabs(a - b) < 1e-8; }
+  
+  point geto(point a, point b, point c) {
+      double a1, a2, b1, b2, c1, c2;
+      point ans;
+      a1 = 2 * (b.x - a.x), b1 = 2 * (b.y - a.y),
+      c1 = sqr(b.x) - sqr(a.x) + sqr(b.y) - sqr(a.y);
+      a2 = 2 * (c.x - a.x), b2 = 2 * (c.y - a.y),
+      c2 = sqr(c.x) - sqr(a.x) + sqr(c.y) - sqr(a.y);
+      if (cmp(a1, 0)) {
+          ans.y = c1 / b1;
+          ans.x = (c2 - ans.y * b2) / a2;
+      } else if (cmp(b1, 0)) {
+          ans.x = c1 / a1;
+          ans.y = (c2 - ans.x * a2) / b2;
+      } else {
+          ans.x = (c2 * b1 - c1 * b2) / (a2 * b1 - a1 * b2);
+          ans.y = (c2 * a1 - c1 * a2) / (b2 * a1 - b1 * a2);
+      }
+      return ans;
+  }
+  
+  int main() {
+      //freopen("/home/lyp/code/algorithm/test.in","r",stdin);
+      scanf("%d", &n);
+      for (int i = 1; i <= n; i++) scanf("%lf%lf", &p[i].x, &p[i].y);
+      for (int i = 1; i <= n; i++) swap(p[rand() % n + 1], p[rand() % n + 1]);
+      o = p[1];
+      for (int i = 1; i <= n; i++) {
+          if (dis(o, p[i]) < r || cmp(dis(o, p[i]), r)) continue;
+          o.x = (p[i].x + p[1].x) / 2;
+          o.y = (p[i].y + p[1].y) / 2;
+          r = dis(p[i], p[1]) / 2;
+          for (int j = 2; j < i; j++) {
+              if (dis(o, p[j]) < r || cmp(dis(o, p[j]), r)) continue;
+              o.x = (p[i].x + p[j].x) / 2;
+              o.y = (p[i].y + p[j].y) / 2;
+              r = dis(p[i], p[j]) / 2;
+              for (int k = 1; k < j; k++) {
+                  if (dis(o, p[k]) < r || cmp(dis(o, p[k]), r)) continue;
+                  o = geto(p[i], p[j], p[k]);
+                  r = dis(o, p[i]);
+              }
+          }
+      }
+      printf("%.10lf\n%.10lf %.10lf", r, o.x, o.y);
+      fclose(stdout);
+      return 0;
+  }
+  
+  
+  ```
+
+  
