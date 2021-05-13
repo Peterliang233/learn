@@ -1167,7 +1167,7 @@ int main() {
 
 ```
 
-#### 最小园覆盖问题
+#### 最小圆覆盖问题
 
 + 假设找到了圆的前i-1个点的最小覆盖圆，当我们加入第i个点的时候，如果这个点在圆上，我们什么都不做，如果不在圆上，我们就找到新的最小覆盖圆，这个圆肯定要经过第i个点。我们以第i个点为基础，重复以上过程加入第j个点，如果第j个点在圆外，那么最小覆盖圆必经过第j个点。
 
@@ -1248,4 +1248,193 @@ int main() {
   
   ```
 
+
+
+
+
+
+
+
+
+
+
+
+### 数据结构
+
+#### 单调栈
+
++ 单调栈的使用是插入一个数的时候，保持栈的单调性的情况下弹出栈里面最少的元素。
++ 当我们往单调栈插入数据的时候，我们可以保持这个栈按照某一单调性，方法就是将这个数和栈顶的元素之间进行比较。
+
+```
+typedef long long ll;
+struct node{
+    int val;
+    int index;
+}Node[3000010];
+stack<node> st;
+ll id[3000010];
+int main() {
+    //freopen("test.in","r",stdin);
+    int n;
+    scanf("%d",&n);
+    for(int i=1;i<=n;i++){
+        scanf("%d",&Node[i].val);
+        Node[i].index=i;
+        id[i]=0;
+    }
+    for(int i=1;i<=n;i++){
+        if(st.empty()){  //判断栈是否为空
+            st.push(Node[i]);
+        }else{
+            if(st.top().val>Node[i].val){
+                st.push(Node[i]);
+            }else{
+                while(st.size()&&st.top().val<Node[i].val){
+                    id[st.top().index]=i;
+                    st.pop();
+                }
+                st.push(Node[i]);
+            }
+        }
+    }
+    for(int i=1;i<=n;i++){
+        printf("%d ",id[i]);
+    }
+    puts("");
+    fclose(stdout);
+    return 0;
+}
+```
+
+#### 单调队列
+
++ 单调队列是维护区间内连续的k个值的最值的问题。
+
++ 比如，我们要维护一个区间内的最大值的时候，我们维护的其实就是一个单调递减的队列，所以，每次我们只需要从这个序列里面拿出队首的那个元素就是当前的最值了。而且，对于每次符合队列的元素，我们将这些元素都放到队尾进行一个维护，因为这些元素后面也可能成为对手元素。
+
++ 维护最小值的也是同样的想法，我们维护一个单调递增的队列，每次我们只需要找出队首的那个元素就行了。
+
+  ```C++
+  const int maxn=1000010;
+  int a[maxn],q[maxn];
+  int n,k;
+  void getmx(){
+      int head=0,tail=0;
+      for(int i=1;i<=k;i++){
+          while(head<=tail&&a[q[tail]]<=a[i]) tail--;
+          q[++tail]=i;
+      }
+      for(int i=k;i<=n;i++){
+          while(head<=tail&&a[q[tail]]<=a[i]) tail--;
+          q[++tail]=i;
+          while(q[head]+k<=i) head++;
+          printf("%d ",a[q[head]]);
+      }
+      printf("\n");
+  }
   
+  void getmi(){
+      int head=0,tail=0;
+      for(int i=1;i<k;i++){
+          while(head<=tail&&a[q[tail]]>=a[i]) tail--;
+          q[++tail]=i;
+      }
+      for(int i=k;i<=n;i++){
+          while(head<=tail&&a[q[tail]]>=a[i]) tail--;
+          q[++tail]=i;
+          while(q[head]+k<=i) head++;
+          printf("%d ",a[q[head]]);
+      }
+      printf("\n");
+  }
+  int main() {
+      //freopen("test.in","r",stdin);
+      scanf("%d%d",&n,&k);
+      for(int i=1;i<=n;i++){
+          scanf("%d",&a[i]);
+      }
+      getmi();
+      getmx();
+      fclose(stdout);
+      return 0;
+  }
+  
+  ```
+
+#### ST表(倍增表)
+
++ ST表可以解决RMD算法。也就是维护区间内某一个属性的值，如gcd，最值等，缺点是不能进行区间的修改。
+
++ ST表是将一个int范围内的数进行二进制划分，我们可以发现，最多也就20或者30个区间,f[i] [j]表示的是区间[i,i+2^j-1]内维护的某一个值。那么，我们发现，如果要求查询某一个区间的时候，我们可以将区间进行划分，我们利用两个区间重叠之后覆盖整个区间的特点尽可能的去覆盖两个区间。
++ 首先，我们要进行的是预处理出每个点倍增一定的长度的值，然后就可以很容易地进行状态方程的转移了。
+
+```C++
+inline int read() {
+  char c = getchar();
+  int x = 0, f = 1;
+  while (c < '0' || c > '9') {
+    if (c == '-') f = -1;
+    c = getchar();
+  }
+  while (c >= '0' && c <= '9') {
+    x = x * 10 + c - '0';
+    c = getchar();
+  }
+  return x * f;
+}
+
+const int logn=21;
+const int maxn=2000010;
+int f[maxn][30],lg[maxn+1];
+void pre(){
+    lg[1]=0;
+    lg[2]=1;
+    for(int i=3;i<=maxn;i++){
+        lg[i]=lg[i/2]+1;
+    }
+}
+
+int main() {
+    //freopen("test.in","r",stdin);
+    int n=read(),m=read();
+    for(int i=1;i<=n;i++){
+        f[i][0]=read();
+    }
+    pre();
+    for(int j=1;j<=logn;j++){
+        for(int i=1;i+(1<<j)-1<=n;i++){
+            f[i][j]=max(f[i][j-1],f[i+(1<<(j-1))][j-1]);
+        }
+    }
+    while(m--){
+        int x=read(),y=read();
+        int s=lg[y-x+1];
+        printf("%d\n", max(f[x][s],f[y-(1<<s)+1][s]));
+    }
+```
+
+#### 线段树
+
+
+
+
+
+
+
+
+
+#### 树状数组
+
+
+
+
+
+
+
+
+
+
+
+#### 分块
+
