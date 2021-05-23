@@ -624,6 +624,101 @@
   + 给出n个字符串，要求我们求这n个字符串的最长公共的子字符串。我们可以利用二分来求字符串的长度，然后对于每个长度，我们求每个字符该长度的子串，然后将其存入哈希表里面，然后求这n个哈希表的交集，这里取交集的方法我们可以用一个map来进行存储每个哈希值，同时用一个ans时刻更新map的最大值。
   + 求字符串的最长回文子串。我们首先对字符串进行预处理，然后进行枚举该最长回文子串的中心的坐标。
 
+```C++
+//回文串哈系模板,一个正哈系和一个反哈系，然后截取相同的进行一个比较就行了
+typedef unsigned long long ll;
+const int base1=233;
+const int base2=23333;
+ll power[1000010],has[1000010],has_reverse[1000010];
+char s[1000010];
+int main(){
+    scanf("%s",s+1);
+    int len=strlen(s+1);
+    power[0]=1;
+    has[0]=0,has_reverse[0]=0;
+    for(int i=1;i<len+1;i++){
+        power[i]=power[i-1]*base1;
+    }
+    for(int i=1;i<=len;i++){
+        has[i]=has[i-1]*base1+s[i-1]-'a'+1;
+        has_reaverse[i]=has_reverse[i-1]*base1+s[len-i+1]-a'+1;
+    }
+    int m;
+    scanf("%d",&m);
+    while(m--){
+        int l,r;
+        scanf("%d%d",&l,&r);
+        ll tmp1=has[r]-has[l-1]*power[r-l+1];
+        ll tmp2=has_reverse[len-i+1]-has_reverse[len-r]*power[r-l+1];
+        if(tmp1==tmp2){
+            puts("YES");
+        }else{
+            puts("NO");
+        }
+    }
+    return 0;
+}
+
+```
+
+#### 矩阵哈希
+
++ 对矩阵的哈希，其实可以利用一个二维前缀和
+
++ $$
+  dp[i][j]=s[j]+dp[i-1][j]*base1+dp[i][j-1]*base2-dp[i-1][j-1]*base1*base2;
+  $$
+
+  ```C++
+  //这是矩阵哈希模板
+  typedef unsigned long long ll;
+  const int maxn=100010;
+  ll p1[maxn],p2[maxn],hash1[maxn],hash2[maxn],a[maxn][maxn];
+  const ll pi=131,pj=233;
+  void init(){
+      p1[0]=1;
+      p2[0]=1;
+      for(int i=1;i<=10001;i++){
+          p1[i]=p1[i-1]*233;
+          p2[i]=p2[i-1]*131;
+      }
+  }
+  
+  void _hash(){
+      for(int i=1;i<=n;i++){
+          for(int j=1;j<=m;j++){
+              hash1[i][j]=hash1[i-1][j]*pi+a[i][j];
+          }
+      }
+      for(int i=1;i<=n;i++){
+          for(int j=1;j<=m;j++){
+              hash1[i][j]=hash1[i][j-1]*pj+a[i][j];
+          }
+      }
+  }
+  
+  int main(){
+      init();
+      cin>>n>>m;
+      for(int i=1;i<=n;i++){
+          for(int j=1;j<=m;j++){
+              cin>>a[i][j];
+          }
+      }
+      _hash();
+      //如果想要或得一个(a,b)大小的矩阵，我们可以
+      for(int i=a;i<=n;i++){
+          for(int j=b;j<=m;j++){
+              ll has=hash1[i][j];
+              has-=hash1[i-a][j]*p2[a];
+              has-=hash1[i][j-b]*p1[b];
+              has+=hash1[i-a][j-b]*p2[a]*p1[b];
+              //这样，我们就可以求出每一个大小ab的矩阵的哈希值了
+          }
+      }
+  }
+  ```
+
 #### KMP算法
 
 + next数组
@@ -673,6 +768,33 @@ vector<int> z_function(string s) {
 ```
 
 #### 字典树
+
++ ```C++
+  //以0为根节点
+  struct trie{
+      int nxt[100010][26],cnt;
+      bool exist[100010];  //该结点结尾的字符串是否存在
+      void insert(char *s,int l){  //插入字符串，l为字符串的长度
+          int p=0;
+          for(int i=0;i<l;i++){
+              int c=s[i]-'a';
+              if(!nxt[p][c]) nxt[p][c]=++cnt;
+              p=nxt[p][c];
+          }
+          exist[p]=1;
+      }
+  
+      bool find(char *s,int l){  //l为字符串的长度
+          int p=0;
+          for(int i=0;i<l;i++){
+              int c=s[i]-'a';
+              if(!nxt[p][c]) return 0;
+              p=nxt[p][c];
+          }
+          return exist[p];
+      }
+  }
+  ```
 
 + 模板
 
@@ -1452,16 +1574,6 @@ int main() {
     }
 ```
 
-#### 线段树
-
-+ 
-
-
-
-
-
-
-
 #### 树状数组
 
 + 树状数组的代码想对于线段树来说更加精简，但是树状数组一般支持的是单点修改，在我看来，树状数组其实和倍增的思想很一致，就是将在一个范围内的区间进行二进制划分，然后我们每次对某一个点的修改，我们只需要更新涉及这个位置的相关的区间就行了，这样我们就可以将时间复杂度降低为log级别的了。
@@ -1475,14 +1587,3 @@ int main() {
   ```
 
 + 然后，如果想要对某一个位置的数进行修改的话，那么我们就只需要后进行二进制区间的更新;如果想要对某一个区间范围进行查询的话，我们只需要利用前缀和的思想进行一个处理。往前面进行查找。
-
-
-
-
-
-
-
-
-
-#### 分块
-

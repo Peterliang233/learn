@@ -160,3 +160,10 @@ CMD /bin/bash
 ```
 
 + 提交镜像命令`docker commit -a="提交者" -m="提交信息" 容器id 镜像名：镜像版本`，这个命令类似于git的commit的命令。
+
+#### sshfs挂载远程文件
+
++ `yay -S sshfs`
++ `sshfs user@remotehost:远程目录 本地目录`
++ 取消挂载 `umount 本地目录`
+
