@@ -167,3 +167,34 @@ CMD /bin/bash
 + `sshfs user@remotehost:远程目录 本地目录`
 + 取消挂载 `umount 本地目录`
 
+#### Docker-compose
+
++ docker compose 负责实现对Docker容器集群的快速编排，我们的应用可能需要mysql，redis等等，这样我们就需要进行对容器启动顺序的编排。
++ 只适用于定义和运行多个docker容器。
++ 文件名建议命名为docker-compose.yml
++ compose核心概念
+  + 服务(service)，一个服务就相当于一个容器，服务可以存在多个。
+  + 项目(project)，一组关联的容器组成一个完整的业务单元。
++ 安装docker-compose,`yay -S docker-compose``
++ ``docker-compose up` 启动一个docker-compose
+
+##### docker-compose 语法
+
+```yaml
+version: "3.0" #版本信息
+services: #创建某一个服务
+	tomcats: #指定服务名称
+		container_name: #指定容器的名称
+		images: #指定进行名
+		ports: #指定端口一映射，完成host与容器的断端口的映射(建议用字符串)
+		volumes: #制定挂在的容器卷，完成宿主机和容器的目录的挂载
+		
+volumes: #声明服务使用过的容器卷
+	tomcatwebapps01: #声明卷名，compose自动创建该卷名，但是卷名的前面会自动加入项目名
+		external: # 为true的话就要自己手动创建好卷名，通过docker volume 相关命令
+		
+networks: #定义服务用到桥
+	hello: #定义上面的服务哟难道的网桥的名称，默认创建就是bridge
+		external: # 使用外部网桥，如果为true就要通过docker network create创建
+```
+
