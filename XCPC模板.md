@@ -602,6 +602,110 @@
   }
   ```
 
+
+#### 欧拉函数
+
++ 欧拉函数一般是用$\varphi(n)$表示小于n的与n互质的数的个数。
+
++ 欧拉函数的性质
+
+  + 积性函数，$gcd(a,b)=1$时存在$\varphi(ab)=\varphi(a)\varphi(b)$。
+  + $n=\sum_{d|n}{\varphi(d)}$,这个可以利用莫比乌斯反演得到。
+  + 如果$n=p^k$,那么就有$\varphi(n)=p^k-p^{k-1}$
+  + 根据唯一分解定理，我们可以得到
+
+  $$
+  \varphi(n)=n\prod^{s}_{i=1}({1-\frac{1}{p_i}})
+  $$
+
++ 如何求解某一个数的欧拉函数
+
+```C++
+int euler_phi(int n){  //直接根据定义进行求解
+    int ans=n;
+    for(int i=2;i*i<=n;i++){
+        if(n%i==0){
+            ans=ans/i*(i-1);
+            while(n%i==0) n/=i;
+        }
+    }
+    if(n>1) ans=ans/n*(n-1);
+    return ans;
+}
+```
+
++ 求解某一个范围内的所有的欧拉函数,时间复杂度为O(n)
+
+```C++
+int prime[5000010];
+int is_prime[5000010];
+int prime[5000010];
+int phi[5000010];
+void pre(){
+    memset(is_prime,1,sizeof(is_prime));
+    int cnt=0;
+    is_prime[1]=0;
+    phi[i]=1;
+    for(int i=2;i<=5000000;i++){
+        if(is_prime[i]){
+            prime[++cnt]=i;
+            phi[i]=i-1;
+        }
+        for(int j=1;j<=cnt&&i*prime[j]<=5000000;j++){
+            is_prime[i*prime[]]=0;
+            if(i%prime[j]){
+				phi[i*prime[j]]=phi[i]*phi[prime[j]];
+            }else{
+                phi[i*prime[j]]=phi[i]*prime[j];
+                break;
+            }
+        }
+    }
+}
+```
+
++ 欧拉定理
+  $$
+  若gcd(a,m)=1，则a^{\varphi(m)}=1(mod m)
+  $$
+  
+
+#### 莫比乌斯函数
+
++ 这里可能用到的知识是**积性函数**、**Dirichlet 卷积**、**莫比乌斯函数**
+
++ 莫比乌斯反演，对于某一些函数f(n),如果很难直接求出它的值，而很容易求出其倍数和或者约数和，那么我们就可以通过莫比乌斯反演进行简化计算，最后求得f(n)的值。
+
++ 对于一个数字n，有一个数字i，求最大的j使得$\lfloor{\frac{n}{i}}\rfloor=\lfloor{\frac{n}{j}}\rfloor$,那么这个j的值就是$j=\lfloor{\frac{n}{\lfloor{\frac{n}{i}}\rfloor}\rfloor}$,这个我们可以通过打表观察到某连续的一块计算下来是相同的数字。
+
++ 接下来，我们介绍一下莫比乌斯函数
+
+  + n=1,u(n)=1
+  + n含有平方因子，u(n)=0
+  + n有k个本质不同的质因子，k为奇数就是-1,偶数就是1
+
++ 那么我们如何求1-n之间每一个数的的莫比乌斯函数
+
+  ```C++
+  void GetMu(){
+      memset(flag,0,sizeof(flag));  //flag为0表示的是u素数，1除外
+      mu[1]=1;
+      for(int i=2;i<=n;i++){
+  		if(!flag[i]){
+              p[++tot]=i,mu[i]=-1;
+          }
+          for(int j=1;j<=tot&&i*p[j]<=n;j++){
+              flag[i*p[j]]=1;
+              if(i%p[j]==0){
+                  mu[i*p[j]]=0;
+                  break;
+              }
+              mu[i*p[j]]=-
+          }
+      }
+  }
+  ```
+
   
 
 ### 字符串

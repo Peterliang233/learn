@@ -188,6 +188,8 @@ services: #创建某一个服务
 		images: #指定进行名
 		ports: #指定端口一映射，完成host与容器的断端口的映射(建议用字符串)
 		volumes: #制定挂在的容器卷，完成宿主机和容器的目录的挂载
+		networks: #指定网桥
+		environment: #指定环境变量
 		
 volumes: #声明服务使用过的容器卷
 	tomcatwebapps01: #声明卷名，compose自动创建该卷名，但是卷名的前面会自动加入项目名
@@ -197,4 +199,16 @@ networks: #定义服务用到桥
 	hello: #定义上面的服务哟难道的网桥的名称，默认创建就是bridge
 		external: # 使用外部网桥，如果为true就要通过docker network create创建
 ```
+
+##### 配置文件的设置
+
++ 当我们配置环境变量的时候，我们可能会暴露我们的敏感的信息，为了防止这个问题，我们可以使用`env_file`进行读取文件里面的环境变量的配置。
+
+##### 设置容器的启动编排
+
++ 容器的启动编排是docker-compose的核心，我们可以使用`depedences_on`  
+
+#####  进行心跳检查
+
+
 
