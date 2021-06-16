@@ -18,4 +18,3 @@ sudo pacman -S flameshot
 + 安装`downgrade`,如果没有这个，我们就需要先进行安装`yay -S downgrade`
 + 之后，我们就可以运行`sudo downgrade qv2ray（软件名)`这种的命令对特定的软件包进行降级处理。
 + 找到之后输入想要回滚到的版本的数字，然后输入按回车就行了。
-

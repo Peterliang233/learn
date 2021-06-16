@@ -668,7 +668,6 @@ void pre(){
   $$
   若gcd(a,m)=1，则a^{\varphi(m)}=1(mod m)
   $$
-  
 
 #### 莫比乌斯函数
 
@@ -704,6 +703,76 @@ void pre(){
           }
       }
   }
+  ```
+
+  
+
+#### 杜教筛模板
+
+$$
+\sum_{i=1}^nu(i)和 \sum_{i=1}^n{\varphi(i)}
+$$
+
+
+
++ 模板
+
+  ```C++
+  #include<bits/stdc++.h>
+  using namespace std;
+  typedef long long ll;
+  const int maxn = 2000010;
+  ll T,n,pri[maxn],cur,mu[maxn],sum_mu[maxn];
+  bool vis[maxn];
+  map<ll,ll> mp_mu;
+  ll S_mu(ll x){
+      if(x<maxn) return sum_mu[x];
+      if(mp_mu[x]) return mp_mu[x];
+      ll ret=1ll;
+      for(ll i=2,j;i<=x;i=j+1){
+          j=x/(x/i);
+          ret-=S_mu(x/i)*(j-i+1);
+      }
+      return mp_mu[x]=ret;
+  }
+  ll S_phi(ll x){
+      ll ret=0ll;
+      for(ll i=1,j;i<=x;i=j+1){
+          j=x/(x/i);
+          ret+=(S_mu(j)-S_mu(i-1))*(x/i)*(x/i);
+      }
+      return ((ret-1)>>1)+1;
+  }
+  int main(){ 
+      //freopen("test.in","r",stdin);
+      cin>>T;
+      mu[1]=1;
+      for(int i=2;i<=maxn;i++){
+          if(!vis[i]){
+              pri[++cur]=i;
+              mu[i]=-1;
+          }
+          for(int j=1;j<=cur&&i*pri[j]<maxn;j++){
+              vis[i*pri[j]]=true;
+              if(i%pri[j]){
+                  mu[i*pri[j]]=-mu[i];
+              }else{
+                  mu[i*pri[j]]=0;
+                  break;
+              }
+          }
+      }
+      for(int i=1;i<maxn;i++){
+          sum_mu[i]=sum_mu[i-1]+mu[i];
+      }    
+      while(T--){
+          cin>>n;
+          cout<<S_phi(n)<<" "<<S_mu(n)<<endl;
+      }
+      fclose(stdout);
+      return 0;
+  }
+  
   ```
 
   
