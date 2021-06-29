@@ -1640,6 +1640,62 @@ int main() {
 }
 ```
 
+##### 例题
+
++ 给出一个序列，若干次询问区间，询问将区间分为符合条件的块数，要求每一块的最左边的数字是这块的所有的数字中的数字的最大的数字。这种题目的变形有很多，比如最左边改为最右边等等。使用st表进行维护。
+
+  ```C++
+  #include<bits/stdc++.h>
+  using namespace std;
+  const int N = 1e5+10;
+  int a[N];
+  int st[N];  //用来存放下标
+  int jump[N][21];  //jump[i][j]表示从第i个位置走2^j布能到达的位置
+  int main(){
+      //freopen("test.in","r",stdin);
+      int n,q;
+      cin>>n>>q;
+      for(int i=1;i<=n;i++){
+          cin>>a[i];
+      }
+      int top=0;
+      // 利用单调栈求出每个位置往右边走一布能到达的位置
+      for(int i=n;i;i--){
+          while(top&&a[st[top]]<=a[i]){
+              top--;
+          }
+          if(top){
+              jump[i][0]=st[top];
+          }else{
+              jump[i][0]=n+1;
+          }
+          st[++top]=i;
+      }
+      jump[n+1][0]=n+1; 
+  
+      // 进行st倍增
+      for(int i=1;i<=20;i++){
+          for(int j=1;j<=n+1;j++){
+              jump[j][i]=jump[jump[j][i-1]][i-1];
+          }
+      }
+      while(q--){
+          int l,r;
+          cin>>l>>r;
+          int ans=1;
+          for(int i=20;~i;i--){
+              if(jump[l][i]<=r){
+                  l=jump[l][i];
+                  ans+=(1<<i);
+              }
+          }
+          cout<<ans<<endl;
+      }
+      fclose(stdout);
+      return 0;
+  }
+  ```
+
 #### 单调队列
 
 + 单调队列是维护区间内连续的k个值的最值的问题。
@@ -1696,6 +1752,8 @@ int main() {
   ```
 
 #### ST表(倍增表)
+
++ 这类题目主要适合多次询问某一个区间的某一个属性的值，包括修改i和不修改的操作。
 
 + ST表可以解决RMD算法。也就是维护区间内某一个属性的值，如gcd，最值等，缺点是不能进行区间的修改。
 
@@ -1767,4 +1825,73 @@ int main() {
 + 如果出现一个变量比较难维护的情况，可以使用多个变量进行维护，但是要确保这些变量都是可以进行区间的合并的，即有区间的合并性。
 
 #### 分块
+
+#### 双指针
+
++ 双指针可以用来维护整个序列的连续的符合条件的序列。注意这里的关键字是连续的，同时这个序列可能还需要满足一些其他的条件。
+
++ 例题：维护一个序列内的三个连续的最长的子序列，要求这些子序列不能相交，这个序列只有小写字母，同时要求每个子序列的每个字符的个数不能超过m个。
+
+  ```C++
+  #include<bits/stdc++.h>
+  using namespace std;
+  char a[10000010];
+  int n,m;
+  int suf[10000010],pre[10000010];
+  int num[30];
+  int main(){
+      //freopen("test.in","r",stdin);
+      scanf("%d%d",&n,&m);
+      getchar();
+      for(int i=1;i<=n;i++){
+          scanf("%c",&a[i]);
+      }
+      // 保存每个r前缀的最大值
+      for(int l=1,r=1;l<=n;l++){
+          // 利用双指针就
+          while(l<=r&&num[a[r]-'a'+1]<=m-1&&r<=n){
+              num[a[r]-'a'+1]++;
+              pre[r]=max(pre[r-1],r-l+1);
+              r++;
+          }
+          num[a[l]-'a'+1]--;
+      }
+      
+      // 维护每个l最大的后缀值
+      memset(num,0,sizeof(num));
+      for(int l=n,r=n;r>=1;r--){
+          while(l<=r&&num[a[l]-'a'+1]<=m-1&&l>=1){
+              num[a[l]-'a'+1]++;
+              suf[l]=max(suf[l+1],r-l+1);
+              l--;
+          }
+          num[a[r]-'a'+1]--;
+      }
+  
+  //     for(int i=1;i<=n;i++){
+  //         cout<<pre[i]<<" "<<suf[i]<<endl;
+  //     }
+  
+      // 再进行一次尺取法
+      memset(num,0,sizeof(num));
+      int ans=0;
+      for(int l=1,r=1;l<=n;l++){
+          while(l<=r&&num[a[r]-'a'+1]<=m-1&&r<=n){
+              num[a[r]-'a'+1]++;
+              ans=max(ans,pre[l-1]+suf[r+1]+r-l+1);
+              r++;
+          }
+          num[a[l]-'a'+1]--;
+      }
+      printf("%d",ans);
+      fclose(stdout);
+      return 0;
+  }
+  ```
+
+  
+
+
+
+
 
