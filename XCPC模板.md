@@ -1747,6 +1747,95 @@ int main() {
     }
 ```
 
+##### 倍增+二分模板
+
++ 倍增一般是用于预处理的时候，但是我们发现这个一般只用来进行预处理操作，对于快读查询一个大的区间，我们可以使用枚举左端点，更新右端点的方法进行处理，下面给出一个倍增+二分的方法查询区间的GCD。
+
+  ```C++
+  #include<bits/stdc++.h>
+  
+  using namespace std;
+  typedef long long ll;
+  
+  ll a[200010],d[200010],f[200010][30];
+  int n;
+  
+  ll gcd(ll x,ll y){
+  	if(y==0) return x;
+  	return gcd(y,x%y);
+  }
+  
+  void ST(){
+  	for(int i=1;i<=n;i++){
+  		f[i][0]=d[i];
+  	}
+  	
+  	int t=log(n)/log(2)+1;
+  	
+  	for(int j=1;j<t;j++){
+  		for(int i=1;i<=n-(1<<j)+1;i++){
+  			f[i][j]=gcd(f[i][j-1],f[i+(1<<(j-1))][j-1]);
+  		}
+  	}
+  }
+  
+  ll query(int l,int r){
+  	int k=log(r-l+1)/log(2);
+  	
+  	return gcd(f[l][k],f[r-(1<<k)+1][k]);
+  }
+  
+  bool check(int l,int mid){
+  	ll g=query(l,mid);
+  	if(g>1) return true;
+  	return false;
+  }
+  
+  void solve(){
+  	scanf("%d",&n);
+  	for(int i=1;i<=n;i++){
+  		scanf("%lld",&a[i]);
+  	}
+  		
+  	for(int i=2;i<=n;i++){
+  		d[i-1]=abs(a[i]-a[i-1]);
+  	}
+  	
+  	n--;
+  	
+  	ST();
+  
+  	int ans=0;
+      // 二分模板，枚举左端点，e
+  	for(int i=1;i<=n;i++){
+  		if(d[i]==1) continue;
+  		int l=i,r=n;
+  		while(l<r){
+  			int mid=(l+r+1)>>1;
+  			if(check(i,mid)==false)  r=mid-1;
+  			else l=mid;
+  		}
+  		
+  		ans=max(ans,l-i+1);
+  	}
+  	
+  	printf("%d\n",ans+1);
+  }
+  
+  int main(){
+  	int t;
+  	scanf("%d",&t);
+  	while(t--){
+  		solve();
+  	}
+  	return 0;
+  }
+  ```
+
+  
+
+
+
 #### 树状数组
 
 + 树状数组的代码想对于线段树来说更加精简，但是树状数组一般支持的是单点修改，在我看来，树状数组其实和倍增的思想很一致，就是将在一个范围内的区间进行二进制划分，然后我们每次对某一个点的修改，我们只需要更新涉及这个位置的相关的区间就行了，这样我们就可以将时间复杂度降低为log级别的了。
@@ -1765,6 +1854,153 @@ int main() {
 
 + 线段树的操作大体分为建树，更新，查询，懒标记等等。建树和更新是比较常见的，对于懒标记，根据具体的题目进行处理，比如进行区间反转等等，可以使用懒惰标记进行标记，根据懒惰进行区间的更新。
 + 如果出现一个变量比较难维护的情况，可以使用多个变量进行维护，但是要确保这些变量都是可以进行区间的合并的，即有区间的合并性。
++ 懒标记是我们经常需要使用的一个应用，为了防止没必要的更新子节点的信息，我们先使用懒标记进行处理，如果真的需要用到这个结点再进行使用。
+
+##### 扫描线
+
++ 线段树有一个比较常见的问题就是扫描线问题，求矩形的并等
+
++ ```C++
+  #include<bits/stdc++.h> 
+  
+  
+  using namespace std;
+  typedef long long ll;
+  
+  const int N=10010;
+  
+  struct node{
+  	int l,r;
+  	int cnt;
+  	double len;
+  }Node[N<<3];
+  
+  struct point{
+  	double x,y1,y2;
+  	int flag;
+  }p[N<<2];
+  
+  double raw[N<<1];
+  map<double,int> val;
+  
+  bool cmp(point a,point b){
+  	return a.x<b.x;
+  }
+  
+  void build(int u,int l,int r){
+  	Node[u].l=l,Node[u].r=r,Node[u].cnt=0,Node[u].len=0;
+  	if(l==r) return;
+  	int mid=(l+r)>>1;
+  	build(u<<1,l,mid);
+  	build(u<<1|1,mid+1,r);
+  }
+  
+  
+  void change(int u,int l,int r,int k){
+  	if(l<=Node[u].l&&r>=Node[u].r){
+  		Node[u].len=((Node[u].cnt+=k)?raw[Node[u].r+1]-raw[Node[u].l]:(Node[u].l==Node[u].r?0:Node[u<<1].len+Node[u<<1|1].len));
+  		return;
+  	}
+  	
+  	int mid=(Node[u].l+Node[u].r)>>1;
+  	if(l<=mid) change(u<<1,l,r,k);
+  	if(r>mid)  change(u<<1|1,l,r,k);
+  	Node[u].len=(Node[u].cnt?raw[Node[u].r+1]-raw[Node[u].l]:Node[u<<1].len+Node[u<<1|1].len);
+  }
+  
+  int main(){
+  	int n;
+  	int k=0;
+  	while(cin>>n&&n){
+  		val.clear();
+  		k++;
+  		printf("Test case #%d\n",k);
+  		
+  		
+  		
+  		for(int i=1;i<=n;i++){
+  			double x1,y1,x2,y2;
+  			scanf("%lf %lf %lf %lf",&x1,&y1,&x2,&y2);
+  				
+  			p[i]={x1,y1,y2,1};
+  			p[i+n]={x2,y1,y2,-1};
+  			
+  			raw[i]=y1;
+  			raw[i+n]=y2;
+  		}
+  		
+  		n+=n;
+  		
+  		sort(raw+1,raw+1+n);
+  		
+  		int m=unique(raw+1,raw+1+n)-(raw+1);
+  		for(int i=1;i<=m;i++){
+  			val[raw[i]]=i;
+  		}
+  		sort(p+1,p+1+n,cmp);
+  		
+  		build(1,1,m-1);
+  		
+  		double res=0;
+  		for(int i=1;i<n;i++){
+  			int y=val[p[i].y1],z=val[p[i].y2]-1;
+  			change(1,y,z,p[i].flag);
+  			res+=Node[1].len*(p[i+1].x-p[i].x);
+  		}
+  		
+  		printf("Total explored area: %.2lf\n",res);
+  		puts("");
+  		
+  	}
+  	return 0;
+  }
+  ```
 
 #### 分块
+
++ 分块可以很好的解决线段树或者树状数组的相关问题，但是这种算法需要找到一个很好的分块的方法，不然很容易造成时间复杂度过高等问题。
+
++ 一般的分块的方法是将整个区间分为$\sqrt{n}$块进行维护，需要查询的时候，我们可以将这部分的区间进行分块维护。
+
++ 分块模板
+
+  ```c++
+  #include<iostream>
+  
+  using namespace std;
+  const int N=500010;
+  int a[N],pos[N],L[N],R[N];
+  
+  int main(){
+      int n;
+      cin>>n;
+      for(int i=1;i<=n;i++){
+          cin>>a[i];
+      }
+      int t=sqrt(n);
+      for(int i=1;i<=t;i++){
+          L[i]=(i-1)*t+1;
+          R[i]=i*t;
+      }
+     	if(R[i]<n){
+          t++;
+          L[t]=R[t-1]+1;
+          R[t]=n;
+      }
+      
+      // 对需要维护的进行预处理
+      for(int i=1;i<=t;i++){
+          for(int j=L[i];j<=R[i];j++){
+              pos[j]=i;
+              
+              // 这里维护的是区间的和
+              sum[i]+=a[j];
+          }
+      }
+      
+      
+      // 进行后续的操作
+      return 0;
+  }
+  ```
 
