@@ -113,7 +113,6 @@ CGRANT ALL PRIVILEGES ON *.* TO `wkcto`@`%`;  //给该用户设置权限
 
 + 匿名挂载就是我们在挂载容器的时候不指定对应的容器名`docker run -d -P -v  容器内路径名 容器id`
 + 具名挂载就是我们在挂载容器的时候指定对应的容器名 `docker run -d -P -v 容器名：容器id`
-+ 
 
 
 
@@ -209,6 +208,4 @@ networks: #定义服务用到桥
 + 容器的启动编排是docker-compose的核心，我们可以使用`depedences_on`  
 
 #####  进行心跳检查
-
-
 
