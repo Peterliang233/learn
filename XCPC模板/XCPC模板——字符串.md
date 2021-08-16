@@ -335,7 +335,203 @@ vector<int> z_function(string s) {
   ![image-20210815222450200](/home/lyp/.config/Typora/typora-user-images/image-20210815222450200.png)
 
 + 计算的方法有一下几种，一种是直接暴力取出所有的字符，然后进行排序。
-+ 另一种是使用倍增进行求解。
+
++ 另一种是使用倍增进行求解。首先，对长度为1的后缀字符串进行排序，然后对后缀长度为2的字符串进行陪需，然后对后缀字符串长度为4的进行排序。依次类推，最后得到的所有的长度。
+
++ 倍增方法的代码如下，时间复杂度为O(nlogn)
+
+  ```C++
+  #include<bits/stdc++.h>
+  using namespace std;
+  const int N=100010;
+  
+  char s[N];
+  
+  int n,sa[N],rk[N<<1],oldrk[N<<1];
+  int main(){
+      scanf("%s",s+1);
+      n=strlen(s+1);
+      
+      for(int i=1;i<=n;i++){
+          sa[i]=i;
+          rk[i]=s[i];
+      }
+      
+      for(int w=1;w<n;w<<=1){
+          // 按照字符串的首位字符进行排序,
+          // 此时sa是按照字符大小相对顺序进行排列
+          sort(sa+1,sa+1+n,[](int x,int y){
+              // 先比较最开始的字符，然后比较最后的那个字符
+             return rk[x]==rk[y]?rk[x+w]<rk[y+w]:rk[x]<rk[y];
+          });
+          
+          memcpy(oldrk,rk,sizeof(rk));
+          
+          for(int p=0,i=1;i<=n;i++){
+              if(oldrk[sa[i]+w]==oldrk[sa[i-1]]&&oldrk[sa[i]+w]==oldrk[sa[i-1]+w]) {
+                  rk[sa[i]]=p; // 如果出现字符相等，那么进行去重
+              }else{
+                  // 否则进行复制排位
+                  rk[sa[i]]=++p;
+              }
+          }
+      }
+      
+      for(int i=1;i<=n;i++){
+          printf("%d ",sa[i]);
+      }
+      puts("");
+      return 0;
+  }
+  ```
+
++ 接下来，为了更优的时间复杂度，可以使用基数排序进行处理。
+
+##### 基数排序
+
++ 基数排序是利用将一个数进行拆解成多个关键字，然后利用关键字进行处理。先对第1关键字进行排序，然后对第2关键字进行排序，类推，最后得到全部排序。这种的算法对空间的耗费比较大。但是对时间比较友好。
+
++ ```C++
+  const int N = 100010;
+  const int W = 100010;
+  const int K = 100;
+  
+  int n, w[K], k, cnt[W];
+  
+  struct Element {
+    int key[K];
+    bool operator<(const Element& y) const {
+      // 两个元素的比较流程
+      for (int i = 1; i <= k; ++i) {
+        if (key[i] == y.key[i]) continue;
+        return key[i] < y.key[i];
+      }
+      return false;
+    }
+  } a[N], b[N];
+  
+  void counting_sort(int p) {
+    memset(cnt, 0, sizeof(cnt));
+    for (int i = 1; i <= n; ++i) ++cnt[a[i].key[p]];
+    for (int i = 1; i <= w[p]; ++i) cnt[i] += cnt[i - 1];
+    // 为保证排序的稳定性，此处循环i应从n到1
+    // 即当两元素关键字的值相同时，原先排在后面的元素在排序后仍应排在后面
+    for (int i = n; i >= 1; --i) b[cnt[a[i].key[p]]--] = a[i];
+    memcpy(a, b, sizeof(a));
+  }
+  
+  void radix_sort() {
+    for (int i = k; i >= 1; --i) {
+      // 借助计数排序完成对关键字的排序
+      counting_sort(i);
+    }
+  }
+  ```
+
++ 利用基数排序可以优化成O(n）
+
++ ```C++
+  // 常数太大
+  #include <algorithm>
+  #include <cstdio>
+  #include <cstring>
+  #include <iostream>
+  
+  using namespace std;
+  
+  const int N = 1000010;
+  
+  char s[N];
+  int n, sa[N], rk[N << 1], oldrk[N << 1], id[N], cnt[N];
+  
+  int main() {
+    int i, m, p, w;
+  
+    scanf("%s", s + 1);
+    n = strlen(s + 1);
+    m = max(n, 300);
+    for (i = 1; i <= n; ++i) ++cnt[rk[i] = s[i]];
+    for (i = 1; i <= m; ++i) cnt[i] += cnt[i - 1];
+    for (i = n; i >= 1; --i) sa[cnt[rk[i]]--] = i;
+  
+    for (w = 1; w < n; w <<= 1) {
+      memset(cnt, 0, sizeof(cnt));
+      for (i = 1; i <= n; ++i) id[i] = sa[i];
+      for (i = 1; i <= n; ++i) ++cnt[rk[id[i] + w]];
+      for (i = 1; i <= m; ++i) cnt[i] += cnt[i - 1];
+      for (i = n; i >= 1; --i) sa[cnt[rk[id[i] + w]]--] = id[i];
+      memset(cnt, 0, sizeof(cnt));
+      for (i = 1; i <= n; ++i) id[i] = sa[i];
+      for (i = 1; i <= n; ++i) ++cnt[rk[id[i]]];
+      for (i = 1; i <= m; ++i) cnt[i] += cnt[i - 1];
+      for (i = n; i >= 1; --i) sa[cnt[rk[id[i]]]--] = id[i];
+      memcpy(oldrk, rk, sizeof(rk));
+      for (p = 0, i = 1; i <= n; ++i) {
+        if (oldrk[sa[i]] == oldrk[sa[i - 1]] &&
+            oldrk[sa[i] + w] == oldrk[sa[i - 1] + w]) {
+          rk[sa[i]] = p;
+        } else {
+          rk[sa[i]] = ++p;
+        }
+      }
+    }
+  
+    for (i = 1; i <= n; ++i) printf("%d ", sa[i]);
+  
+    return 0;
+  }
+  ```
+
++ ```C++
+  // 常数及
+  #include <algorithm>
+  #include <cstdio>
+  #include <cstring>
+  #include <iostream>
+  
+  using namespace std;
+  
+  const int N = 1000010;
+  
+  char s[N];
+  int n, sa[N], rk[N], oldrk[N << 1], id[N], px[N], cnt[N];
+  // px[i] = rk[id[i]]（用于排序的数组所以叫 px）
+  
+  bool cmp(int x, int y, int w) {
+    return oldrk[x] == oldrk[y] && oldrk[x + w] == oldrk[y + w];
+  }
+  
+  int main() {
+    int i, m = 300, p, w;
+  
+    scanf("%s", s + 1);
+    n = strlen(s + 1);
+    for (i = 1; i <= n; ++i) ++cnt[rk[i] = s[i]];
+    for (i = 1; i <= m; ++i) cnt[i] += cnt[i - 1];
+    for (i = n; i >= 1; --i) sa[cnt[rk[i]]--] = i;
+  
+    for (w = 1;; w <<= 1, m = p) {  // m=p 就是优化计数排序值域
+      for (p = 0, i = n; i > n - w; --i) id[++p] = i;
+      for (i = 1; i <= n; ++i)
+        if (sa[i] > w) id[++p] = sa[i] - w;
+      memset(cnt, 0, sizeof(cnt));
+      for (i = 1; i <= n; ++i) ++cnt[px[i] = rk[id[i]]];
+      for (i = 1; i <= m; ++i) cnt[i] += cnt[i - 1];
+      for (i = n; i >= 1; --i) sa[cnt[px[i]]--] = id[i];
+      memcpy(oldrk, rk, sizeof(rk));
+      for (p = 0, i = 1; i <= n; ++i)
+        rk[sa[i]] = cmp(sa[i], sa[i - 1], w) ? p : ++p;
+      if (p == n) {
+        for (int i = 1; i <= n; ++i) sa[rk[i]] = i;
+        break;
+      }
+    }
+  
+    for (i = 1; i <= n; ++i) printf("%d ", sa[i]);
+  
+    return 0;
+  }
+  ```
 
 #### ac自动机
 
