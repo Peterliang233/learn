@@ -153,6 +153,7 @@ vector<int> z_function(string s) {
       z[i] = z[i - l];
     } else {
       z[i] = max(0, r - i + 1);
+      // 这部分属于暴力进行匹配
       while (i + z[i] < n && s[z[i]] == s[i + z[i]]) ++z[i];
     }
     if (i + z[i] - 1 > r) l = i, r = i + z[i] - 1;
@@ -321,6 +322,20 @@ vector<int> z_function(string s) {
   }
   ```
 
+#### 后缀自动机
+
+##### 后缀数组
+
++ 后缀数组是两个数组，sa和rk，sa[i]表示将所有的后缀进行排序后的第i小的后缀的编号，rk[i] 表示的是后缀i的排名。这两个数组满足性质$sa[rk[i]]=rk[sa[i]]=i$​
+
++ 这个排序不是先比较长短，而是先逐个字符进行比较。
+
++ 给一张图进行理解
+
+  ![image-20210815222450200](/home/lyp/.config/Typora/typora-user-images/image-20210815222450200.png)
+
++ 计算的方法有一下几种，一种是直接暴力取出所有的字符，然后进行排序。
++ 另一种是使用倍增进行求解。
 
 #### ac自动机
 
