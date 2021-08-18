@@ -338,7 +338,7 @@ vector<int> z_function(string s) {
 
 + 另一种是使用倍增进行求解。首先，对长度为1的后缀字符串进行排序，然后对后缀长度为2的字符串进行陪需，然后对后缀字符串长度为4的进行排序。依次类推，最后得到的所有的长度。
 
-+ 倍增方法的代码如下，时间复杂度为O(nlogn)
++ 倍增方法的代码如下，时间复杂度为$O(nlog^{2}n)$
 
   ```C++
   #include<bits/stdc++.h>
@@ -428,7 +428,7 @@ vector<int> z_function(string s) {
   }
   ```
 
-+ 利用基数排序可以优化成O(n）
++ 利用基数排序可以把里面的sort排序优化成O(n），故时间复杂度降为$O(nlogn)$
 
 + ```C++
   // 常数太大
@@ -483,7 +483,7 @@ vector<int> z_function(string s) {
   ```
 
 + ```C++
-  // 常数及
+  // 常数下
   #include <algorithm>
   #include <cstdio>
   #include <cstring>
