@@ -1,5 +1,36 @@
 ### 数论
 
+
+
+#### 快速幂
+
++ 求$axbmodM,0<a,b<1e18$
+
+  + 求这种情况一般存在两种方法，第一种是使用二进制拆解的方法进行求解。这种方法类似于快速幂的写法。时间复杂度为O(log2m)
+
+  ```C++
+  void qp(ll a,ll b,ll mod){
+      ll c=0;
+      while(b){
+          if(b&1) c=(c+a)%mod;
+          a=(a+a)%mod;
+      }
+      return c;
+  }
+  ```
+
+  + 另一种方法是使用unsigned long long ，然后控制精度误差进行处理，时间复杂度为O(1)
+
+  ```C++
+  ll binmul(ll a,ll b,ll m){
+      ull c=(ull)a*b-(ull)((long double)a/m*b+0.5L)*m;
+      if(c<m) return c; // 如果在(0,m]之间
+      return c+m; //
+  }
+  ```
+
+  
+
 #### 逆元
 
 + 求逆元的方式有很多中，根据不同的情况可以利用不同的方法来进行求解。
