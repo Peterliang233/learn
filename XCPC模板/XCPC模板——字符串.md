@@ -537,21 +537,105 @@ vector<int> z_function(string s) {
 ##### 后缀自动机
 
 + 主要解决的我呢提是一个字符串中搜索另一个字符串的所有的位置。
+
 + 计算给定的字符串中有多少个不同的子串。
+
 + 首先，我们需要明确几个定义
+
   + 结束位置endpos，就是某一个字符串的所有的结束的位置。这里可以看作一个集合。SAM中的每个状态对应的是一个或者多个endpos相同的子串。就是SAM的状态数等于所有子串的等价类的个数，在加上初始的状态。
+
   + 给出几个引理
+
     + 字符串s的两个非空子串u和w的endpos相同，当且仅当字符串u在s中的每次出现，都是以w后缀的形式出现的。
     + 如果字符串s的两个子串u和v。如果两个字符串的endpos相交为空的话，要么是包含关系，要么相交为空的关系。
     + 考虑一个endpos的等价类，将类中的所有子串按长度非递增的顺序排列。每个子串都不会比他的前一个子串长。与此同时每个子串也是它前一个子串的后缀。换句话说，**对于统一等价类的任意两子串，较短者为较长者的后缀**。且该等价类中的子串长度恰好覆盖整个区间$[x,y]$
+
   + 后缀链接link
+
     + 一个后缀链接连接到对应于w的最长后缀的另一个endpos等价类的状态。
     + 给出几个引理
       + 所有的后缀连接构成了一棵根节点为t0的树
       + 通过endpos结合构造的树，与通过后缀连接构造的树相同。
+
   + 相关模板
+
     + 检查字符串是否出现(给一个文本串和多个匹配串，需要多次判断是否是子串)
-    + 不同子串的个数
+
+    + 不同子串的个数(每次新添加一个字符进入自动机)
+
+    ```C++
+    #include<bits/stdc++.h>
+    
+    using namespace std;
+    
+    #define int long long
+    const int N=1e5+10;
+    
+    int n;
+    
+    struct SAM{
+    	int len,fa;
+    	unordered_map<int,int> nex;
+    }tree[N<<2];
+    
+    int tot,last;
+    int ans=0;
+    
+    void insert(int x){
+    	int now=++tot;
+    	tree[now].len=tree[last].len+1;
+    	int p=last;
+    	
+    	while(p!=-1&&!tree[p].nex.count(x)){
+    		tree[p].nex[x]=now;
+    		p=tree[p].fa;
+    	}
+    	
+    	if(p==-1) tree[now].fa=0;
+    	else{
+    		int q=tree[p].nex[x];
+    		if(tree[p].len+1==tree[q].len){
+    			tree[now].fa=q;
+    		}else{
+    			int cur=++tot;
+    			tree[cur].len=tree[p].len+1;
+    			tree[cur].fa=tree[q].fa;
+    			tree[cur].nex=tree[q].nex;
+    			while(p!=-1&&tree[p].nex[x]==q){
+    				tree[p].nex[x]=cur;
+    				p=tree[p].fa;
+    			}
+    			
+    			tree[q].fa=tree[now].fa=cur;
+    		}
+    	}
+    	
+    	last=now;
+    	
+    	ans+=tree[now].len-tree[tree[now].fa].len;
+    }
+    
+    void init(){
+    	tree[0].len=0,tree[0].fa=-1;
+    	last=0;
+    }
+    
+    signed main(){
+    	scanf("%lld",&n);
+    	init();
+    	while(n--){
+    		int x;
+    		scanf("%lld",&x);
+    		insert(x);
+    		
+    		printf("%lld\n",ans);
+    	}
+    	return 0;
+    }
+    ```
+
+    
+
     + 所有不同子串的长度
     + 字典序第k大子串
     + 最小循环移位
@@ -560,7 +644,109 @@ vector<int> z_function(string s) {
     + 所有出现位置
     + 最短的没有出现的字符串
     + 两个字符串的最长公共子串
+
+    ```C++
+    #include <stdio.h>
+    #include <string.h>
+    #define N 250010
+    int len=0,ans=0,n=0,last,root,son[N<<1][26],fa[N<<1],mx[N<<1];  
+    char str1[N],str2[N];
+    void ins(int ch){
+        int p=last,np=++n;last=np;mx[np]=mx[p]+1;
+        while(p && !son[p][ch]) son[p][ch]=np,p=fa[p];
+        if(!p) fa[np]=root;
+        else{
+            int q=son[p][ch];
+            if(mx[q]==mx[p]+1) fa[np]=q;
+            else{
+                int nq=++n;mx[nq]=mx[p]+1;
+                memcpy(son[nq],son[q],sizeof(son[q]));
+                fa[nq]=fa[q];fa[q]=fa[np]=nq;
+                while(son[p][ch]==q) son[p][ch]=nq,p=fa[p];
+            }
+        }
+    } 
+    int main(){
+        // 输入两个待匹配的字符串
+        scanf("%s%s",str1+1,str2+1);
+        int len1=strlen(str1+1),len2=strlen(str2+1);root=last=++n;
+        for(int i=1;i<=len1;i++) ins(str1[i]-'a');
+        int p=root;
+        for(int i=1;i<=len2;i++){
+            if(son[p][str2[i]-'a']) len++,p=son[p][str2[i]-'a'];
+            else{
+                while(p && !son[p][str2[i]-'a']) p=fa[p];
+                if(!p) len=0,p=root;
+                else len=mx[p]+1,p=son[p][str2[i]-'a'];
+            }if(len>ans) ans=len;
+        }printf("%d\n",ans);
+        return 0;
+    } 
+    ```
+
     + 多个字符串之间的最长公共子串
+
+    ```C++
+    #include <stdio.h>
+    #include <string.h>
+    #define N 100010
+    #define inf 0x7fffffff
+    char str[N];
+    int n,last,root,cnt=0,ans=0,len[N<<1],son[N<<1][26],fa[N<<1],mx[N<<1],mn[N<<1],a[N<<1],c[N<<1];
+    inline int max(int x,int y){
+        if(x>y) return x;
+        return y;
+    }
+    inline int min(int x,int y){
+        if(x<y) return x;
+        return y;
+    }
+    inline void ins(int ch){
+        int p=last,np=++cnt;last=np;len[np]=len[p]+1;
+        while(p && !son[p][ch]) son[p][ch]=np,p=fa[p];
+        if(!p) fa[np]=root;
+        else{
+            int q=son[p][ch];
+            if(len[q]==len[p]+1) fa[np]=q;
+            else{
+                int nq=++cnt;len[nq]=len[p]+1;
+                memcpy(son[nq],son[q],sizeof(son[nq]));
+                fa[nq]=fa[q];fa[q]=fa[np]=nq;
+                while(son[p][ch]==q) son[p][ch]=nq,p=fa[p];
+            }
+        }
+    }
+    int main(){
+        // 输入n个字符串，要求这些字符串的最长公共子串
+        scanf("%s",str+1);last=root=++cnt;n=strlen(str+1);
+        for(int i=1;i<=n;i++) ins(str[i]-'a');
+        for(int i=1;i<=cnt;i++) c[len[i]]++;
+        for(int i=1;i<=cnt;i++) c[i]+=c[i-1];
+        for(int i=cnt;i>=1;i--) a[c[len[i]]--]=i;
+        for(int i=1;i<=cnt;i++) mn[i]=inf;
+        memset(mx,0,sizeof(mx));
+        while(scanf("%s",str+1)>0){
+            n=strlen(str+1);int p=root,sz=0;
+            for(int i=1;i<=n;i++){
+                if(son[p][str[i]-'a']) sz++,p=son[p][str[i]-'a'];
+                else{
+                    while(p&&!son[p][str[i]-'a']) p=fa[p];
+                    if(!p) sz=0,p=root;
+                    else sz=len[p]+1,p=son[p][str[i]-'a'];
+                }mx[p]=max(mx[p],sz);
+            }for(int i=1;i<=cnt;i++){
+                int p=a[i];
+                mn[p]=min(mn[p],mx[p]);
+                mx[fa[p]]=max(mx[fa[p]],mx[p]);
+                mx[p]=0;
+            }
+        }for(int i=1;i<=cnt;i++) if(mn[i]!=inf) ans=max(mn[i],ans);
+        printf("%d\n",ans);
+        return 0;
+    } 
+    ```
+
+    
 
 #### ac自动机
 
@@ -598,7 +784,7 @@ vector<int> z_function(string s) {
           int u=q.front();
           q.pop();
           for(int i=0;i<26;i++){
-              if(tr[u][i]){
+              if(tr[u][i]){  // 如果这个结点存在，那么直接根据它的父节点的fail指针找到它的fail指针
                   fail[tr[u][i]]=tr[fail[u]][i];
                   q.push(tr[u][i]);
               }else{
@@ -624,10 +810,10 @@ vector<int> z_function(string s) {
       //freopen("test.in","r",stdin);
       scanf("%d",&n);
       for(int i=1;i<=n;i++){
-          scanf("%s",s+1);
+          scanf("%s",s+1); // 待匹配的子串
           insert(s);
       }
-      scanf("%s",s+1);
+      scanf("%s",s+1);  // 文本串
       build();
       printf("%d\n",query(s));
       fclose(stdout);
