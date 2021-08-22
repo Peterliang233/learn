@@ -968,3 +968,129 @@ vector<int> z_function(string s) {
   	cout<<endl;
   }
   ```
+
+
+
+#### FFT
+
++ FFT是用来求多项式系数的一个数学变换方法，原理比较复杂，故只做了解，存几个模板
+
++ 给出f(x)和g(x)的系数，如何求f(x)*g(x)的系数
+
+  + 递归版本
+
+  ```C++
+  // luogu-judger-enable-o2
+  // luogu-judger-enable-o2
+  #include<iostream>
+  #include<cstdio>
+  #include<cmath>
+  using namespace std;
+  const int MAXN = 4 * 1e6 + 10;
+  inline int read() {
+      char c = getchar(); int x = 0, f = 1;
+      while (c < '0' || c > '9') {if (c == '-')f = -1; c = getchar();}
+      while (c >= '0' && c <= '9') {x = x * 10 + c - '0'; c = getchar();}
+      return x * f;
+  }
+  const double Pi = acos(-1.0);
+  struct complex {
+      double x, y;
+      complex (double xx = 0, double yy = 0) {x = xx, y = yy;}
+  } a[MAXN], b[MAXN];
+  complex operator + (complex a, complex b) { return complex(a.x + b.x , a.y + b.y);}
+  complex operator - (complex a, complex b) { return complex(a.x - b.x , a.y - b.y);}
+  complex operator * (complex a, complex b) { return complex(a.x * b.x - a.y * b.y , a.x * b.y + a.y * b.x);} //不懂的看复数的运算那部分
+  void fast_fast_tle(int limit, complex *a, int type) {
+      if (limit == 1) return ; //只有一个常数项
+      complex a1[limit >> 1], a2[limit >> 1];
+      for (int i = 0; i <= limit; i += 2) //根据下标的奇偶性分类
+          a1[i >> 1] = a[i], a2[i >> 1] = a[i + 1];
+      fast_fast_tle(limit >> 1, a1, type);
+      fast_fast_tle(limit >> 1, a2, type);
+      complex Wn = complex(cos(2.0 * Pi / limit) , type * sin(2.0 * Pi / limit)), w = complex(1, 0);
+      //Wn为单位根，w表示幂
+      for (int i = 0; i < (limit >> 1); i++, w = w * Wn) //这里的w相当于公式中的k
+          a[i] = a1[i] + w * a2[i],
+                 a[i + (limit >> 1)] = a1[i] - w * a2[i]; //利用单位根的性质，O(1)得到另一部分
+  }
+  int main() {
+      int N = read(), M = read();
+      for (int i = 0; i <= N; i++) a[i].x = read();
+      for (int i = 0; i <= M; i++) b[i].x = read();
+      int limit = 1; while (limit <= N + M) limit <<= 1;
+      fast_fast_tle(limit, a, 1);
+      fast_fast_tle(limit, b, 1);
+      //后面的1表示要进行的变换是什么类型
+      //1表示从系数变为点值
+      //-1表示从点值变为系数
+      //至于为什么这样是对的，可以参考一下c向量的推导过程，
+      for (int i = 0; i <= limit; i++)
+          a[i] = a[i] * b[i];
+      fast_fast_tle(limit, a, -1);
+      for (int i = 0; i <= N + M; i++) printf("%d ", (int)(a[i].x / limit + 0.5)); //按照我们推倒的公式，这里还要除以n
+      return 0;
+  }
+  
+  递归版
+  ```
+
+  + 迭代版本
+
+  ```C++
+  // 这是迭代写法，时间复杂度较优
+  #include<bits/stdc++.h>
+  #define eps 1e-6
+  using namespace std;
+  const int N=4e6+10;
+  const double pi=acos(-1);
+  struct Complex{
+      double x,y;
+      Complex(double x=0,double y=0):x(x),y(y){}
+  };
+  Complex operator+(Complex a,Complex b){return Complex(a.x+b.x,a.y+b.y);}
+  Complex operator-(Complex a,Complex b){return Complex(a.x-b.x,a.y-b.y);}
+  Complex operator*(Complex a,Complex b){return Complex(a.x*b.x-a.y*b.y,a.x*b.y+a.y*b.x);}
+  int limit,l;
+  int r[N];
+  void FFT(Complex*f,int op){
+      for(int i=0;i<limit;++i){
+          if(i<r[i])swap(f[i],f[r[i]]); 
+      }
+      for(int mid=2;mid<=limit;mid*=2){
+          Complex wn=Complex(cos(2*pi/mid),op*sin(2*pi/mid));
+          for(int j=0;j<limit;j+=mid){
+              Complex w=Complex(1,0);
+              for(int k=j;k<j+mid/2;++k,w=w*wn){
+                  Complex x=f[k],y=w*f[k+mid/2];
+                  f[k]=x+y;
+                  f[k+mid/2]=x-y;
+              }
+          }
+      }
+      if(op==-1){
+          for(int i=0;i<limit;++i){
+              f[i].x/=limit;
+          }
+      }
+  }
+  int n,m;
+  Complex a[N],b[N]; 
+  int main(){
+      cin>>n>>m;
+      for(int i=0;i<=n;++i)scanf("%lf",&a[i].x);
+      for(int i=0;i<=m;++i)scanf("%lf",&b[i].x);
+      for(limit=1,l=0;limit<=n+m;limit*=2,l++);
+      for(int i=0;i<limit;++i)r[i]=(r[i>>1]>>1)|((i&1)<<(l-1));
+      FFT(a,1),FFT(b,1);
+      for(int i=0;i<limit;++i)a[i]=a[i]*b[i];
+      FFT(a,-1);
+      for(int i=0;i<=n+m;++i){
+      	if(fabs(a[i].x)<eps)printf("0 ");
+          else printf("%.0lf ",a[i].x);
+      }
+  }
+  ```
+
+  
+
