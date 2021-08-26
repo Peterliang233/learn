@@ -262,7 +262,7 @@ vector<int> z_function(string s) {
 
 + 字典树就是我们把一个字符串构建成一颗树的形式，我们可以对每一个节点进行标号，然后我们可以从根节点进行便利过去，如果遇到某一个节点的下一个不存在的话，那么就构建一个新的节点出来。最后我们所有的字符串就构建成了一棵树的形式，我们同时可以给每个节点加上一些其他的属性，比如表示经过这个节点的字符串的个数或者是以这个节点结束的字符的个数等等。
 
-#### Manacher算法
+#### $Manache$r算法
 
 + 马拉车算法是用来求最大的回文字符串的长度的一个算法，它的时间复杂度为O(n).这种算法是采用一边优化，一边暴力的算法进行求解的。核心思想是每次记录下当前的最长的回文串的最左边和最右边的长度，然后，我们枚举每个中心，通过与左右边界的位置来进行判断它的边界。这里奇数和偶数是分开来计算的。我们可以在现在原字符串的左右两边插入一个肯定不会出现的字符，然后在每个字符中间插入一个‘#’,最后我们只需要按奇数长度的字符来进行处理就行了。
 
@@ -327,13 +327,13 @@ vector<int> z_function(string s) {
 
 ##### 后缀数组
 
-+ 后缀数组是两个数组，sa和rk，sa[i]表示将所有的后缀进行排序后的第i小的后缀的编号，rk[i] 表示的是后缀i的排名。这两个数组满足性质$sa[rk[i]]=rk[sa[i]]=i$​
++ 后缀数组是两个数组，$sa$和$rk$，**$sa[i]$表示将所有的后缀进行排序后的第i小的后缀的编号**，**$rk[i]$ 表示的是后缀i的排名**。这两个数组满足性质$sa[rk[i]]=rk[sa[i]]=i$​
 
 + 这个排序不是先比较长短，而是先逐个字符进行比较。
 
 + 给一张图进行理解
 
-  ![image-20210815222450200](/home/lyp/.config/Typora/typora-user-images/image-20210815222450200.png)
+  ![image-20210824165514729](C:\Users\ncuya\AppData\Roaming\Typora\typora-user-images\image-20210824165514729.png)
 
 + 计算的方法有一下几种，一种是直接暴力取出所有的字符，然后进行排序。
 
@@ -484,7 +484,7 @@ vector<int> z_function(string s) {
   ```
 
 + ```C++
-  // 常数下
+  // 常数小
   #include <algorithm>
   #include <cstdio>
   #include <cstring>
@@ -534,6 +534,310 @@ vector<int> z_function(string s) {
   }
   ```
 
++ 求$sa$数组和$height$数组的模板
+
+```C++
+int  n,k,m;
+char s[maxn];
+int w[maxn],sum[maxn];
+int rk1[maxn],sa[maxn],tp1[maxn],tax[maxn],height[maxn];
+int *rk=rk1, *tp=tp1;
+
+void bucket()  
+{
+	for(int i=0; i<=m; ++i) tax[i]=0;
+	for(int i=1; i<=n; ++i) tax[rk[i]]++;
+	for(int i=1; i<=m; ++i) tax[i]+=tax[i-1];
+	for(int i=n; i>=1; i--) sa[tax[rk[tp[i]]]--]=tp[i];
+}
+
+void get_sa() 
+{
+	m=128;
+	for(int i=1; i<=n; i++) rk[i]=s[i],tp[i]=i;
+	bucket();
+	for(int w=1,p=0; p<n; m=p,w<<=1)
+	{
+		p=0;
+		for(int i=1; i<=w; i++) tp[++p]=n-w+i;
+		for(int i=1; i<=n; i++) 
+			if(sa[i]>w) tp[++p]=sa[i]-w;
+		bucket();
+		swap(tp,rk);
+		rk[sa[1]]=p=1;
+		for(int i=2;i<=n;++i)
+			rk[sa[i]]=(tp[sa[i-1]]==tp[sa[i]] && tp[sa[i-1]+w]==tp[sa[i]+w])?p:++p;
+	}
+}
+
+void get_height()
+{
+	int k=0;
+	for(int i=1; i<=n; i++)
+	{
+		if(k) k--;
+		int j=sa[rk[i]-1];
+		while(s[i+k]==s[j+k]) ++k;
+		height[rk[i]]=k;
+	}
+}
+```
+
+##### Height数组
+
++ $LCP$就是两个字符串的最长公共前缀，我们定义$lcp(i,j)$表示后缀字符串i和后缀字符串j的最长公共前缀的长度。
++ 定义：$height[i]=lcp(sa[i],sa[i-1])$,也就是第i名后缀和它前一名的后缀的最长公共前缀。其中$height[1]=0$
++ 引理，$height[rk[i]]>=height[rk[i-1]]-1$
++ $O(n)$求$height$数组代码实现
+```C++
+for(i=1,k=0;i<=n;i++){
+	if(k) --k;
+	while(s[i+k]==s[sa[rk[i]-1]+k])  ++k;
+	ht[rk[i]]=k;
+}
+```
+
++ 相关应用
+  + 两个字符串的最长公共前缀
+  
+  + 比较一个字符串的两个子串的大小
+  
+  + 求出多个字符串的最长公共子串
+  
+    + 将n个字符串拼接起来，跑一个$sa$和$height$数组，然后二分这个公共子串的长度，接着利用$height$数组判断是否右连续的大于二分的$mid$的值，并且是来自$n$个不同的字符串，维护答案即可。
+    + 模板如下
+  
+    ```C++
+    #include<cstdio>
+    #include<cstring>
+    #include<iostream>
+    #define rint register int
+    const int N=1e6+10;
+    using namespace std;
+    int s[N];
+    int y[N],x[N],c[N],sa[N],rk[N],height[N];
+    int n, num, belong[N], pos, vis[N];
+    char t[N];
+    inline void get_SA() {
+        for(int i=0;i<=n;++i){
+            c[i]=x[i]=y[i]=sa[i]=rk[i]=height[i]=0;
+        }
+        int m = 5000; //ascll('z')=122
+        for(int i=0;i<=m;++i) c[i] = 0;
+     
+    	for (int i=1; i<=n; ++i) ++c[x[i]=s[i]];//桶
+    	for (int i=2; i<=m; ++i) c[i]+=c[i-1];//求前缀和
+    	for (int i=n; i>=1; --i) sa[c[x[i]]--]=i;//逆着标序 得到sa
+    	for (int k=1; k<=n; k<<=1){ //倍增合并
+    		int num=0;
+    		for (int i=n-k+1; i<=n; ++i) y[++num]=i;//没有第二关键字，排名在最前
+    		for (int i=1; i<=n; ++i) if (sa[i]>k) y[++num]=sa[i]-k;
+     
+    		for (int i=1; i<=m; ++i) c[i]=0;       //初始化桶
+    		for (int i=1; i<=n; ++i) ++c[x[i]];    //桶
+    		for (int i=2; i<=m; ++i) c[i]+=c[i-1]; //求前缀和
+    		for (int i=n; i>=1; --i) sa[c[x[y[i]]]--]=y[i],y[i]=0;//第二关键字真正的排了序
+            for(int i=1;i<=n;++i) y[i] = x[i];
+    		//swap(x,y);
+    		x[sa[1]] = num = 1;
+    		for (int i=2; i<=n; ++i) //对第二关键字进行了简单的桶分类保存至x数组中
+    			x[sa[i]]=(y[sa[i]]==y[sa[i-1]] && y[sa[i]+k]==y[sa[i-1]+k]) ? num : ++num;
+     
+    		if (num==n) break;
+    		m=num;
+    	}
+    	//for (int i=1; i<=n; ++i) printf("%d ", sa[i]);
+    }
+    int check(int x,int n)
+    {
+        for(int i=1;i<=n-1;i++)
+        {
+            if(height[i]<x) continue;
+            int cnt=0;
+            for(int j=0;j<=num;j++) vis[j]=0;
+            while(height[i]>=x&&i<=n-1)
+            {
+                if(!vis[belong[sa[i-1]]])
+                {
+                    vis[belong[sa[i-1]]]=1;
+                    cnt++;
+                }
+                i++;
+            }
+            if(!vis[belong[sa[i-1]]])
+            {
+                vis[belong[sa[i-1]]]=1;
+                cnt++;
+            }
+            if(cnt>=num)
+            {
+                pos=sa[i-1];
+                return true;
+            }
+        }
+        return false;
+    }
+    inline void get_height() {
+    	int k=0;
+    	for (int i=1; i<=n; ++i) rk[sa[i]]=i;
+    	for (int i=1; i<=n; ++i){
+    		if (rk[i]==1) continue;//第一名height为0
+    		if (k) --k;   //h[i]>=h[i-1]-1;
+    		int j=sa[rk[i]-1];
+    		while (j+k<=n && i+k<=n && s[i+k]==s[j+k]) ++k;
+    		height[rk[i]]=k;//h[i]=height[rk[i]];
+    	}
+    //	puts("");
+    //	for(int i = 1; i <= n; ++i) printf("%d ",height[i]);
+    }
+    inline bool run(int mid)
+    {
+     
+        for(int i = 1; i <= n; ++i){
+     
+            if(height[i] < mid) continue;
+            for(int j = 0; j <= num; ++j) vis[j] = 0;
+            int cnt  = 0;
+            while(i <= n && height[i] >= mid){
+     
+                if(!vis[belong[sa[i-1]]]){
+                    vis[belong[sa[i-1]]] = 1;
+                    cnt++;
+                }
+                ++i;
+            }
+            if(!vis[belong[sa[i-1]]]){
+                vis[belong[sa[i-1]]] = 1;
+                cnt++;
+            }
+            if(cnt >= num){
+                pos = sa[i-1];
+                return 1;
+            }
+     
+        }
+        return 0;
+    }
+    int main() {
+        while(~scanf("%d", &num)){
+            if(num == 0) break;
+            n = 0;
+            int tar = 123;
+            for(int i = 1; i <= num; ++i){
+                scanf("%s", t + 1);
+                int len = strlen(t + 1);
+                // 将num个字符串拼接起来
+                for(int j = 1; j <= len; ++j){
+                    s[++n] = t[j] - 'a' + 1;
+                    belong[n] = i;
+                }
+                s[++n]=++tar;
+                belong[n] = 0;
+            }
+     
+            s[n+1]=0;
+            //cout<<s+1<<endl;
+            // 求后缀数组和height数组
+            get_SA();
+            get_height();
+            int  l = 1, r = 200, ans = 0;
+            pos = 0;
+            while(l <= r){
+                int mid = l + r >> 1;
+                if(run(mid)) ans = mid, l = mid + 1;
+                else r = mid - 1;
+            }
+            if(!ans) puts("IDENTITY LOST");
+            else{
+                for(int i = pos; i < pos + ans; ++i) printf("%c", s[i] - 1 +'a');
+                puts("");
+            }
+        }
+    }
+    /*
+    3
+    aabbaabb
+    abbababb
+    bbbbbabb
+    */
+    ```
+  
+    
+  
+  + 不同的子串的数目
+  
+    + 按照后缀排序之后，每次新增的子串就是除了与上一个后缀的$LCP$剩下的前缀。这些前缀一定是新增的。$\frac{{n}{(n+1)}}{2}-\sum_{i=2}^n{height[i]}$
+    + 求一下后缀数组和height数组即可。
+  
+  + 出现第$k$次的子串的最大长度
+  
+    + 出现k次意味着按照后缀排序之后存在至少k个连续的后缀的$LCP$是这个子串，所以先求出连续的k-1个$height$的最小值，然后这些最小值中的最大值就是答案。使用单调队列维护最大值即可。
+  
+    + 代码如下
+  
+    ```C++
+    #include <cstdio>
+    #include <cstring>
+    #include <iostream>
+    #include <set>
+    
+    using namespace std;
+    
+    const int N = 40010;
+    
+    int n, k, a[N], sa[N], rk[N], oldrk[N], id[N], px[N], cnt[1000010], ht[N], ans;
+    multiset<int> t;  // multiset 是最好写的实现方式
+    
+    bool cmp(int x, int y, int w) {
+      return oldrk[x] == oldrk[y] && oldrk[x + w] == oldrk[y + w];
+    }
+    
+    int main() {
+      int i, j, w, p, m = 1000000;
+    
+      scanf("%d%d", &n, &k);
+      --k;
+    
+      for (i = 1; i <= n; ++i) scanf("%d", a + i);  //求后缀数组
+      for (i = 1; i <= n; ++i) ++cnt[rk[i] = a[i]];
+      for (i = 1; i <= m; ++i) cnt[i] += cnt[i - 1];
+      for (i = n; i >= 1; --i) sa[cnt[rk[i]]--] = i;
+    
+      for (w = 1; w < n; w <<= 1, m = p) {
+        for (p = 0, i = n; i > n - w; --i) id[++p] = i;
+        for (i = 1; i <= n; ++i)
+          if (sa[i] > w) id[++p] = sa[i] - w;
+        memset(cnt, 0, sizeof(cnt));
+        for (i = 1; i <= n; ++i) ++cnt[px[i] = rk[id[i]]];
+        for (i = 1; i <= m; ++i) cnt[i] += cnt[i - 1];
+        for (i = n; i >= 1; --i) sa[cnt[px[i]]--] = id[i];
+        memcpy(oldrk, rk, sizeof(rk));
+        for (p = 0, i = 1; i <= n; ++i)
+          rk[sa[i]] = cmp(sa[i], sa[i - 1], w) ? p : ++p;
+      }
+    
+      for (i = 1, j = 0; i <= n; ++i) {  //求 height
+        if (j) --j;
+        while (a[i + j] == a[sa[rk[i] - 1] + j]) ++j;
+        ht[rk[i]] = j;
+      }
+    
+      for (i = 1; i <= n; ++i) {  //求所有最小值的最大值
+        t.insert(ht[i]);
+        if (i > k) t.erase(t.find(ht[i - k]));
+        ans = max(ans, *t.begin());
+      }
+    
+      cout << ans;
+    
+      return 0;
+    }
+    ```
+  
+  + 是否有某字符串在文本串中至少不重叠出现了两次
+  
+  + 连续若干个相同的子串
+
 ##### 后缀自动机
 
 + 主要解决的我呢提是一个字符串中搜索另一个字符串的所有的位置。
@@ -542,20 +846,20 @@ vector<int> z_function(string s) {
 
 + 首先，我们需要明确几个定义
 
-  + 结束位置endpos，就是某一个字符串的所有的结束的位置。这里可以看作一个集合。SAM中的每个状态对应的是一个或者多个endpos相同的子串。就是SAM的状态数等于所有子串的等价类的个数，在加上初始的状态。
+  + 结束位置$endpos$，就是某一个字符串的所有的结束的位置。这里可以看作一个集合。SAM中的每个状态对应的是一个或者多个$endpos$相同的子串。就是SAM的状态数等于所有子串的等价类的个数，在加上初始的状态。
 
   + 给出几个引理
 
-    + 字符串s的两个非空子串u和w的endpos相同，当且仅当字符串u在s中的每次出现，都是以w后缀的形式出现的。
-    + 如果字符串s的两个子串u和v。如果两个字符串的endpos相交为空的话，要么是包含关系，要么相交为空的关系。
-    + 考虑一个endpos的等价类，将类中的所有子串按长度非递增的顺序排列。每个子串都不会比他的前一个子串长。与此同时每个子串也是它前一个子串的后缀。换句话说，**对于统一等价类的任意两子串，较短者为较长者的后缀**。且该等价类中的子串长度恰好覆盖整个区间$[x,y]$
+    + 字符串s的两个非空子串u和w的$endpos$相同，当且仅当字符串u在s中的每次出现，都是以w后缀的形式出现的。
+    + 如果字符串s的两个子串u和v。如果两个字符串的$endpos$相交为空的话，要么是包含关系，要么相交为空的关系。
+    + 考虑一个$endpos$的等价类，将类中的所有子串按长度非递增的顺序排列。每个子串都不会比他的前一个子串长。与此同时每个子串也是它前一个子串的后缀。换句话说，**对于统一等价类的任意两子串，较短者为较长者的后缀**。且该等价类中的子串长度恰好覆盖整个区间$[x,y]$
 
   + 后缀链接link
 
-    + 一个后缀链接连接到对应于w的最长后缀的另一个endpos等价类的状态。
+    + 一个后缀链接连接到对应于w的最长后缀的另一个$endpos$等价类的状态。
     + 给出几个引理
-      + 所有的后缀连接构成了一棵根节点为t0的树
-      + 通过endpos结合构造的树，与通过后缀连接构造的树相同。
+      + 所有的后缀连接构成了一棵根节点为$t0$的树
+      + 通过$endpos$结合构造的树，与通过后缀连接构造的树相同。
 
   + 相关模板
 
@@ -684,7 +988,7 @@ vector<int> z_function(string s) {
     } 
     ```
 
-    + 多个字符串之间的最长公共子串
+    + **多个字符串之间的最长公共子串**
 
     ```C++
     #include <stdio.h>
