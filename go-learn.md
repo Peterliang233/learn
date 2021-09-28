@@ -1,8 +1,13 @@
-## RPC技术（远程过程调用）
+## 微服务
 
-主要分为四个部分：客户端，服务端，客户端存根服务端存根。客户端发送请求，服务端接收请求，客户端存根将发送的数据，调用的方法和传输的参数进行打包通过网络发送到服务端存根，然后服务端通过解析获取方法和参数，产生相应的结果，然后传输回客户端。
+### go-micro框架
 
-#  gRPC技术
++ 相关概念
+  + 首先，我们要明确micro和go-micro的区别。micro是一个微服务的管理工具，就相当与我们平时用的工具包，负责管理微服务相关。go-micro是一个组件化的框架，提供了服务发现，负载均衡，同步传输，异步通信以及事件驱动的等机制。
+  + consul是一个组件的注册中心，我们注册的相关微服务可以在上面看到。
+  + goprotobuf相关工具。GRPC工具包
+
+### gRPC技术
 
 + 不用proto生成代码
 
@@ -25,84 +30,85 @@
     ```
 
   + 如果有对多个参数的传递或者计算出多个值，可以先将变量封装在一个结构体里面，我们可以创建一个model包，将变量用结构体进行封装，然后传递结构体变量即可。
+  
   + 最后先执行server端的程序，然后执行client的程序即可。
-
-```go
-//server.go
-package main
-
-import (
-	"github.com/Peterliang233/demo/parm"
-	"net"
-	"net/http"
-	"net/rpc"
-)
-
-type MathUtil struct {
-}
-
-//调用方法接口
-func (mu *MathUtil) CalculateCircleArea(req parm.Result, resp *float64) error {
-	*resp = req.Num1 + req.Num2
-	return nil
-}
-
-func main() {
-	mathUtil := new(MathUtil)  //实例化
-	err := rpc.Register(mathUtil)  //注册一个远程调用函数
-	if err != nil {
-		panic(err.Error())
-	}
-	//把服务注册到http协议
-	rpc.HandleHTTP()
-
-	listen, err := net.Listen("tcp", ":9091")
-	if err != nil {
-		panic(err.Error())
-	}
-	err = http.Serve(listen, nil)
-	if err != nil {
-		panic(err.Error())
-	}
-}
-```
-
-```go
-//client.go
-package main
-
-import (
-"fmt"
-	"github.com/Peterliang233/demo/parm"
-	"net/rpc"
-)
-
-func main() {
-	client, err := rpc.DialHTTP("tcp", "localhost:9091")
-	if err != nil {
-		panic(err.Error())
-	}
-
-	req := &parm.Result{
-		13.93,
-		123.9,
-	}
-
-	var resp *float64
-	//同步调用
-	//err = client.Call("MathUtil.CalculateCircleArea", req, &resp)
-	//if err != nil {
-	//	panic(err.Error())
-	//}
-	//fmt.Println(*resp)
-	//异步调用
-	syncCall := client.Go("MathUtil.CalculateCircleArea", req, &resp, nil)
-	call := <- syncCall.Done  //注意这里可能会发生阻塞
-	fmt.Println(call)
-	fmt.Println(*resp)
-}
-
-```
+  
+  + ```Go
+    //server.go
+    package main
+    
+    import (
+    	"github.com/Peterliang233/demo/parm"
+    	"net"
+    	"net/http"
+    	"net/rpc"
+    )
+    
+    type MathUtil struct {
+    }
+    
+    //调用方法接口
+    func (mu *MathUtil) CalculateCircleArea(req parm.Result, resp *float64) error {
+    	*resp = req.Num1 + req.Num2
+    	return nil
+    }
+    
+    func main() {
+    	mathUtil := new(MathUtil)  //实例化
+    	err := rpc.Register(mathUtil)  //注册一个远程调用函数
+    	if err != nil {
+    		panic(err.Error())
+    	}
+    	//把服务注册到http协议
+    	rpc.HandleHTTP()
+    
+    	listen, err := net.Listen("tcp", ":9091")
+    	if err != nil {
+    		panic(err.Error())
+    	}
+    	err = http.Serve(listen, nil)
+    	if err != nil {
+    		panic(err.Error())
+    	}
+    }
+    ```
+  
+  + ```Go
+    //client.go
+    package main
+    
+    import (
+    "fmt"
+    	"github.com/Peterliang233/demo/parm"
+    	"net/rpc"
+    )
+    
+    func main() {
+    	client, err := rpc.DialHTTP("tcp", "localhost:9091")
+    	if err != nil {
+    		panic(err.Error())
+    	}
+    
+    	req := &parm.Result{
+    		13.93,
+    		123.9,
+    	}
+    
+    	var resp *float64
+    	//同步调用
+    	//err = client.Call("MathUtil.CalculateCircleArea", req, &resp)
+    	//if err != nil {
+    	//	panic(err.Error())
+    	//}
+    	//fmt.Println(*resp)
+    	//异步调用
+    	syncCall := client.Go("MathUtil.CalculateCircleArea", req, &resp, nil)
+    	call := <- syncCall.Done  //注意这里可能会发生阻塞
+    	fmt.Println(call)
+    	fmt.Println(*resp)
+    }
+    
+    ```
 
 
 
@@ -242,39 +248,23 @@ func main() {
 
   
 
-## Gin-Blog搭建流程
+## Web应用开发
 
-### 一、项目目录结构
-
-#### api
+### 目录结构
 
 + api表示的是相关的版本的信息，一般下面的目录为v1，v2等等
 
-#### configs
-
 + configs存放的是相关的配置，我们把一些server配置和mysql的一些配置文件放在里面
-
-#### databases
 
 + databases存放的是数据库的连接和初始化的一些操作
 
-#### middlerware
-
 + 中间件目录存放的是一些登录验证，jwt验证等
-
-#### model
 
 + 模型层存放的是一些结构体，我们将用户的属性用结构体进行打包存放
 
-#### routers
-
 + 路由目录是存储的是路由接口
 
-#### utils
-
 + utils存放的是一些处理的函数，如读取配置的函数等等
-
-
 
 ### gorm框架
 
@@ -307,15 +297,15 @@ func main() {
 
 + gorm的删除一般都是软删除，在数据库里面其实并没有进行数据的删除，但那是我们在进行查询的时候不会查询到对应被软删除的数据。
 
-### 密码加密
+### 信息安全
 
-### jwt（JSON Web Tokens)中间件
+#### JWT（JSON Web Tokens)中间件
 
-#### jwt原理
+##### jwt原理
 
 + 服务器认证以后，生成一个json对象，发回给用户，之后用户与服务端通信的时候，都要发回这个json对象，服务器就只要靠这个对象认定用户身份。
 
-#### jwt数据结
+##### jwt数据结构
 
 jwt解析之后，就是一个很长的字符串，这个字符串分为三个部分，每个部分之间用$.$进行分割。
 
@@ -370,7 +360,7 @@ Authorization: Bearer <token>
   + 为了降低jwt被盗的风险，我们应该将jwt的有效时间设置得短一些。
   + 为了减少盗用，jwt不应该使用http协议明码进行传输，要使用https协议传输。
 
-### 跨域中间件
+### 跨域
 
 #### 什么是跨域？
 
@@ -413,7 +403,7 @@ Authorization: Bearer <token>
 + CORS与JSONP的使用的目的相同，但是比JSONP更强大。
 + JSONP只支持GET请求，而CORS支持所有的http请求。JSONP的优点是支持老式的浏览器以及可以向不支持CORS的浏览器请求数据。
 
-### go邮件发送
+### 邮件发送
 
 安装库
 
@@ -449,9 +439,7 @@ func main(){
 }
 ```
 
-
-
-## mqtt使用
+### mqtt使用
 
 + 首先，下载对应的mqtt包，`yay -S mosquitto  ` 
 

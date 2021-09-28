@@ -34,8 +34,8 @@ int main(){
         power[i]=power[i-1]*base1;
     }
     for(int i=1;i<=len;i++){
-        has[i]=has[i-1]*base1+s[i-1]-'a'+1;
-        has_reaverse[i]=has_reverse[i-1]*base1+s[len-i+1]-a'+1;
+        has[i]=has[i-1]*base1+s[i-]-'a'+1;
+        has_reaverse[i]=has_reverse[i-1]*base1+s[len-i+1]-'a'+1;
     }
     int m;
     scanf("%d",&m);
