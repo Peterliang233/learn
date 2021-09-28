@@ -258,6 +258,72 @@ int main() {
 
 + 然后，如果想要对某一个位置的数进行修改的话，那么我们就只需要后进行二进制区间的更新;如果想要对某一个区间范围进行查询的话，我们只需要利用前缀和的思想进行一个处理。往前面进行查找。
 
+##### 常用模板
+
++ 存一个板子，获取存在**绝对众数**的区间的个数模板
+
+  ```C++
+  #include <bits/stdc++.h>
+  using namespace std;
+  typedef long long LL;
+  const int INF = 0x3f3f3f3f;
+  const LL mod = 1e9 + 7;
+  const int N = 500005;
+  // 修改差分 来维护前缀和的前缀和
+  // c1 为差分d c2为d*i  c3 为d*i*i
+  LL c1[N * 2], c2[N * 2], c3[N * 2];
+  LL sum(int x) {
+      LL res = 0;
+      for (int i = x; i > 0; i -= i & -i) {
+          res += c1[i] * (x + 2) * (x + 1) - c2[i] * (2 * x + 3) + c3[i];
+      }
+      return res / 2;
+  }
+  void add(int x, LL d, int n) {
+      for (int i = x; i <= n; i += i & -i) {
+          c1[i] += d;
+          c2[i] += d * x;
+          c3[i] += d * x * x;
+      }
+  }
+  int a[N];
+  vector<int> b[N];
+  int main() {
+      int n;
+      scanf("%d%*d", &n);
+      for (int i = 1; i <= n; i++) {
+          scanf("%d", &a[i]);
+          b[a[i]].push_back(i);
+      }
+      const int wc = n + 1;  // 偏移量，把[-n,n] 平移到 [1,2n+1]
+      LL ans = 0;
+      for (int i = 0; i < n; i++) {
+          b[i].push_back(n + 1);
+          int last = 0;
+          for (int j = 0; j < b[i].size(); j++) {
+              int y = 2 * j - last + wc, x = 2 * j - (b[i][j] - 1) + wc;
+              // 查询 sum([1,t-1] 的权值和), 其中t在[x,y]范围内，
+              ans += sum(y - 1) - (x >= 3 ? sum(x - 2) : 0);
+              // [x,y] 这些数的权值+1
+              add(x, 1, 2 * n + 1);
+              add(y + 1, -1, 2 * n + 1);
+              last = b[i][j];
+          }
+          last = 0;
+          for (int j = 0; j < b[i].size(); j++) {
+              int y = 2 * j - last + wc, x = 2 * j - (b[i][j] - 1) + wc;
+              add(x, -1, 2 * n + 1);
+              add(y + 1, 1, 2 * n + 1);
+              last = b[i][j];
+          }
+      }
+      printf("%lld\n", ans);
+      return 0;
+  }
+  ```
+
+  
+
 #### 线段树
 
 + 线段树的操作大体分为建树，更新，查询，懒标记等等。建树和更新是比较常见的，对于懒标记，根据具体的题目进行处理，比如进行区间反转等等，可以使用懒惰标记进行标记，根据懒惰进行区间的更新。
@@ -416,5 +482,4 @@ int main() {
       return 0;
   }
   ```
-
 
