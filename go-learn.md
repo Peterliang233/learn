@@ -442,16 +442,84 @@ func main(){
 ### mqtt使用
 
 + 首先，下载对应的mqtt包，`yay -S mosquitto  ` 
-
 + 下载好之后需要启动相应的服务器 `systemctl start mosquitto`   和`systemctl enable mosquitto`。
-
 + 之后，我们可以创建一个订阅者`mosquitto_sub -t topic   ` ,同时创建一个发布者`mosquitto_pub -t topic -m "订阅消息"`
 
 
 
 
 
+### 测试
+
+##### 单元测试
+
++ Go语言的测试分为单元测试和基准测试。用于测试的文件的命名方法为`xxx_test.go`这个是一种默认的默认的命名方法，我么先写好一个用户测试的函数，然后就可以在这个测试文件里面测试这个函数的效果。
+
++ ```go
+  package main
+  
+  import (
+  	"fmt"
+  	"testing"
+  )
+  
+  func Add(a, b int) int {
+  	return a + b
+  }
+  
+  func TestAdd(t *testing.T) {
+  	var a = 1
+  	var b = 2
+  
+  	c := Add(a, b)
+  
+  	fmt.Println(c)
+  }
+  ```
+
++ 测试函数的命名规则就是Testxxx，其中Test为单元测试的固定开头，go test只会执行次开头的方法，
 
 
 
+##### 基准测试
 
++ 基准测试是利用go的benchmark包里面的相关代码进行实现的。一般是用来测试一个函数的执行的时间。函数的命名规则一般为Benchmarkxxx, 基准测试是将这个函数执行很多次，然后计算每个函数执行的平均时间。以此来达到测试函数性能的目的。
+
++ ```go
+  package test
+  
+  import "testing"
+  
+  func BenchmarkAppendSlice1(b *testing.B) {
+  	for i := 0; i < b.N; i++ {
+  		AppendSlice1()
+  	}
+  }
+  
+  
+  func BenchmarkAppendSlice2(b *testing.B) {
+  	for i := 0; i < b.N; i ++ {
+  		AppendSlice2()
+  	}
+  }
+  ```
+
+  
+
+##### 子测试
+
++ 子测试提供了一种在一个测试函数里面执行多个测试的能力，每个测试函数执行初始化需要做一些相同的初始化工作。利用子测试可以只需要执行一次初始化工作。
+
++ ```go
+  func TestSub(t *testing.T){
+      t.Run("A=1", Sub1)
+      t.Run("B=2", Sub2)
+      t.Run("C=3",sun3)
+  }
+  ```
+
+##### 子测试并发
+
+##### Main测试
+
++ main测试通过生命一个`func testMain(m *testing.m)`，它是名字比较特殊的测试，如果声明了一个函数，则当前测试程序将不是直接执行各项测试，而是将测试交给Testmain调度。
