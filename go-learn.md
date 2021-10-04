@@ -523,3 +523,10 @@ func main(){
 ##### Main测试
 
 + main测试通过生命一个`func testMain(m *testing.m)`，它是名字比较特殊的测试，如果声明了一个函数，则当前测试程序将不是直接执行各项测试，而是将测试交给Testmain调度。
+
+
+
+### Go插件
+
++ 验证插件
+  + 验证插件用的是`"github.com/go-playground/validator/v10"`这个第三方库，用法就是在结构体上打上一个json的tag，然后在json里面设置这个属性的一些限制以及验证的信息。然后在函数里面注册一个validate的实例，最后就可以进行验证这个结构体是否满足了。但是这里有一个不太好的地方就是验证报错的信息是英文的，用户体验感不是很好，这里可以利用一个翻译的插件库`"github.com/goplayground/validator/v10/translations/zh"`，这个插件库就是先注册一个翻译器，然后就是将这个验证器和翻译器绑定在一起就行了。
