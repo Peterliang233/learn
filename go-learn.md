@@ -524,8 +524,6 @@ func main(){
 
 + main测试通过生命一个`func testMain(m *testing.m)`，它是名字比较特殊的测试，如果声明了一个函数，则当前测试程序将不是直接执行各项测试，而是将测试交给Testmain调度。
 
-
-
 ### Go插件
 
 + 验证插件
