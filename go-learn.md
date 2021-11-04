@@ -528,3 +528,11 @@ func main(){
 
 + 验证插件
   + 验证插件用的是`"github.com/go-playground/validator/v10"`这个第三方库，用法就是在结构体上打上一个json的tag，然后在json里面设置这个属性的一些限制以及验证的信息。然后在函数里面注册一个validate的实例，最后就可以进行验证这个结构体是否满足了。但是这里有一个不太好的地方就是验证报错的信息是英文的，用户体验感不是很好，这里可以利用一个翻译的插件库`"github.com/goplayground/validator/v10/translations/zh"`，这个插件库就是先注册一个翻译器，然后就是将这个验证器和翻译器绑定在一起就行了。
+
+
+
+### Go使用Https
+
++ 我们首先需要在认证平台获取.pfx格式的文件，然后通过这个文件生成.pem公钥，`openssl pkcs12 -in peterliang-top-iis-1104231106.pfx -nodes -out test.pem `
++ 获得这个公钥之后，我们需要利用这个公钥获取私钥，` openssl rsa -in test.pem -out test.key`
++ 这样，我们就得到了公钥和私钥匙，这样就可以放到项目的请求接口里面的中间件里面进行安全连接了。
