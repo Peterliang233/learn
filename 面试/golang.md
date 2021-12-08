@@ -11,3 +11,73 @@
     + 接口类型的方法是动态调度的，不能在编译阶段就确定下来，所有类型结构转换成接口的过程都会涉及到内存逃逸的情况发生，如果对于性能要求比较高的而且访问频次比较高的函数调用，尽可能避免使用接口类型。
     + 减少外部引用，如指针
     + 在切片使用场景中一般实在函数传递的场景，而且切片可能会涉及动态内存分配。
+  
++ 如何交替打印数字和字母
+
+  + 我们准备两个无缓冲区的channel来控制goroutine的协作。开两个协程，一个用来打印数字，另一个用来打印字母。首先是用来打印数字的协程先使用，然后往打印字符的channel内传递参数，以此循环打印，最后利用一个wait等待打印结束之后推出即可。
+
+  + 具体的执行步骤是
+
+    + 定义两个bool类型的channel赋值给letter和number
+    + 定义一个等待组，阻塞协程等协程执行结束之后才退出。
+    + 启动第一个协程，死循环，但是由于select多路复用，number为false的值阻塞，发生协程切换。
+    + 等待组原子+1
+    + 启动第二个协程，并传入协程空间，死循环去select letter但是由于letter false发生阻塞。
+    + 此时number channel推入true值，协程A中的number值获取true，代码执行
+    + 执行完A中的协程之后，letter放入bool true。
+    + 携程B触发，协程B执行，但是wait不走done，所以程序依然不会退出，再次将ture推入number，以此进行循环操作，知道打印结束。
+    + 最后wati.done()被执行，主进程退出。
+
+  + 代码如下
+
+    ```go
+    package main
+    
+    import (
+            "fmt"
+            "sync"
+    )
+    
+    func main(){
+    	letter, number := make(chan bool), make(chan bool)
+    	wait := sync.WaitGroup{}
+    
+    	go func(){
+    		i := 1
+    		for {
+    			select {
+    			case <- number:
+    				fmt.Print(i)
+    				i++
+    				fmt.Print(i)
+    				i++
+    				letter <- true
+    			}
+    		}
+    	}()
+    
+    	wait.Add(1)
+    
+    	go func(wait *sync.WaitGroup){
+    		i := 'A'
+    		for {
+    			select {
+    			case <- letter:
+    				if i >= 'Z'{
+    					wait.Done()
+    					return
+    				}
+    				fmt.Print(string(i))
+    				i++
+    				fmt.Print(string(i))
+    				i++
+    				number <- true
+    			}
+    		}
+    	}(&wait)
+    	number <- true
+    	wait.Wait()
+    }
+    ```
+
+    
