@@ -80,4 +80,49 @@
     }
     ```
 
++ 判断一个字符串里面是否具有相同的字符，要求不能使用其他的数据结构。这里我们使用两种方法进行求解
+
+  + 一种是利用strings.Count()来判断一个字符串中另一个字符串出现的次数。
+
+  + 一种是利用strings.LastIndex()来判断一个字符串中另一个字符串最后出现的位置。
+
+  + ```GO
+    package main
     
+    import (
+    	"fmt"
+    	"strings"
+    )
+    
+    
+    func isUniqueString(s string) bool {
+    	if strings.Count(s, "") > 3000 {
+    		return false
+    	}
+    	for index, v := range s {
+    		if v > 127 {
+    			return false
+    		}
+    		// if strings.Count(s, string(v)) > 1{
+    		// 	return false
+    		// }
+    		if strings.LastIndex(s, string(v)) != index {
+    			return false
+    		}
+    	}
+    
+    	return true
+    }
+    
+    func main(){
+    	s := "hello"
+    	fmt.Println(isUniqueString(s))
+    }
+    ```
+
++ channel底层
+
+  + buf，一个循环链表，来缓存数据
+  + sendx和recvx是记录buf用来发送数据和接收数据的index
+  + lock是一个互斥锁
+  + recvq和sendq是用来接收和发送的goroutine抽象出来的结构体的队列，是一个双向的链表。
