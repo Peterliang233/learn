@@ -307,7 +307,9 @@ vector<int> z_function(string s) {
   	len=c.size();
   	int ans=0;
   	for(int i=0,l=0,r=-1;i<len;i++){
+          // 这个k表示的就是当前位置的最长的回文串长度
   		int k=(i>r)?1:min(d[l+r-i],r-i);
+          // 然后我们找到最长
   		while(0<=i-k&&i+k<len&&c[i-k]==c[i+k]){
   			k++;
   		}
